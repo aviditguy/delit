@@ -1,0 +1,460 @@
+
+
+
+
+python matplotlib library
+
+Simple Line Plot
+#+begin_src python
+import matplotlib.pyplot as plt
+
+x = [1,2,3,4]
+y = [10,20,25,30]
+
+plt.title("First Graph")
+plt.xlabel("X Axis")
+plt.ylabel("Y Axis")
+
+plt.plot(x,y)
+plt.show()
+#+end_src
+
+Plot Multiple Lines
+#+begin_src python
+import matplotlib.pyplot as plt
+
+x = [1,2,3,4]
+y1 = [10,20,25,30]
+y2 = [5,15,22,28]
+
+plt.plot(x, y1)
+plt.plot(x, y2, color="red", linestyle="--", marker="o")
+plt.show()
+#+end_src
+
+Legend add karna
+#+begin_src python
+import matplotlib.pyplot as plt
+
+x = [1,2,3,4,5]
+y1 = [5,7,8,7,9]
+y2 = [10,20,30,40,50]
+
+plt.plot(x,y1,label="Line 1")
+plt.plot(x,y2,label="Line 2")
+
+plt.legend()
+plt.show()
+#+end_src
+
+Bar Chart
+Categories compare karne ke liye
+#+begin_src python
+import matplotlib.pyplot as plt
+
+categories = ["A","B","C"]
+values = [10,20,15]
+
+plt.bar(categories,values)
+plt.show()
+#+end_src
+
+Horizontal Bar Chart
+#+begin_src python
+import matplotlib.pyplot as plt
+
+categories = ["A","B","C"]
+values = [5,7,3]
+
+plt.barh(categories,values)
+plt.title("Horizontal Bar")
+plt.show()
+#+end_src
+
+Histogram
+Data frequency distribution dikhane ke liye
+#+begin_src python
+import matplotlib.pyplot as plt
+
+data = [1,2,2,3,3,3,4,4,5]
+plt.hist(data,bins=5)
+plt.show()
+#+end_src
+
+Scatter Plot
+Data Distribution aur correlation dekhne ke liye
+#+begin_src python
+import matplotlib.pyplot as plt
+
+x = [1,2,3,4,5]
+y = [5,7,8,7,9]
+
+plt.scatter(x,y)
+plt.show()
+#+end_src
+
+
+Pie Chart
+Percentage distributions dekhne ke liye
+#+begin_src python
+import matplotlib.pyplot as plt
+
+sizes = [30,40,20,10]
+labels = ["A","B","C","D"]
+
+plt.pie(sizes,labels=labels,autopct="%1.1f%%")
+plt.title("Pie Chart")
+plt.show()
+#+end_src
+
+Box Plot
+Outliers aur data spread dekhne ke liye
+#+begin_src python
+import matplotlib.pyplot as plt
+
+data = [10,20,30,40,50,60,70]
+
+plt.boxplot(data)
+plt.title("Box Plot")
+plt.show()
+#+end_src
+
+Area Plot
+#+begin_src python
+import matplotlib.pyplot as plt
+
+x = [1,2,3,4,5]
+y = [10,20,15,25,30]
+
+plt.fill_between(x,y)
+plt.title("Area Plot")
+plt.show()
+#+end_src
+
+Stem Plot
+#+begin_src python
+import matplotlib.pyplot as plt
+
+x = [1,2,3,4]
+y = [10,20,15,25]
+
+plt.stem(x,y)
+plt.title("Stem Plot")
+plt.show()
+#+end_src
+
+Step Plot
+#+begin_src python
+import matplotlib.pyplot as plt
+
+x = [1,2,3,4]
+y = [10,20,15,25]
+
+plt.step(x,y)
+plt.title("Step Plot")
+plt.show()
+#+end_src
+
+
+
+#+begin_src python
+import matplotlib.pyplot as plt
+
+# Sales data
+months = ["Jan","Feb","Mar","Apr","May"]
+sales = [200,250,300,280,350]
+
+products = ["Laptop","Phone","Tablet","Accessories"]
+product_sales = [500,700,300,200]
+
+regions = ["North","South","East","West"]
+region_sales = [400,300,200,350]
+
+profits = [50,80,60,70,90]
+
+# Create dashboard layout
+plt.figure(figsize=(10,8))
+
+# 1 Line chart (Monthly sales)
+plt.subplot(2,2,1)
+plt.plot(months,sales,marker="o")
+plt.title("Monthly Sales")
+
+# 2 Bar chart (Product sales)
+plt.subplot(2,2,2)
+plt.bar(products,product_sales)
+plt.title("Sales by Product")
+
+# 3 Pie chart (Region distribution)
+plt.subplot(2,2,3)
+plt.pie(region_sales,labels=regions,autopct="%1.1f%%")
+plt.title("Sales by Region")
+
+# 4 Profit line
+plt.subplot(2,2,4)
+plt.plot(months,profits,color="green",marker="o")
+plt.title("Monthly Profit")
+
+plt.tight_layout()
+plt.show()
+#+end_src
+
+
+
+
+
+
+*Context switching* is the process where the kernel saves the state of the current
+*process and loads the state of another process so the CPU can switch between them*.
+The kernel is responsible for context switching.
+
+Context Switching (Simple Steps)
+
+1. *Process running in user mode*
+   - A process is running normally in *user mode* on the CPU.
+2. *Time slice finishes (Interrupt)*
+   - The CPU timer notices that the process has used its allotted time.
+   - The CPU interrupts the process and switches to *kernel mode*.
+3. *Kernel saves the process state*
+   - The kernel *saves the current state* of the process.
+   - This includes CPU registers, program counter, and memory information.
+   - This helps the process *resume later from the same point*.
+4. *Kernel handles pending tasks*
+   - The kernel checks and performs tasks that occurred during the time slice.
+   - Example: *I/O operations* like keyboard input, disk read/write, etc.
+5. *Kernel selects the next process*
+   - The kernel checks the *ready queue (list of ready processes)*.
+   - It chooses the *next process to run* using a scheduling algorithm.
+6. *Prepare memory and CPU for new process*
+   - The kernel *loads the memory context* of the new process.
+   - It also prepares the *CPU registers* for that process.
+7. *Set new time slice*
+   - The kernel tells the CPU *how long this new process can run*.
+8. *Switch back to user mode*
+   - The CPU switches from *kernel mode to user mode*.
+9. *New process starts running*
+   - The selected process now *gets control of the CPU* and begins execution.
+
+Simple Diagram for Context Switching:
+#+begin_src
+        +------------------+
+        |   Process A      |
+        |  (User Mode)     |
+        +------------------+
+                |
+                | Time Slice Over (Timer Interrupt)
+                v
+        +------------------+
+        |      CPU         |
+        | Switch to Kernel |
+        |      Mode        |
+        +------------------+
+                |
+                v
+        +------------------+
+        |      Kernel      |
+        | Save State of A  |
+        | Handle I/O Tasks |
+        | Select Next Proc |
+        +------------------+
+                |
+                v
+        +------------------+
+        |  Load State of B |
+        |  Set Time Slice  |
+        +------------------+
+                |
+                v
+        +------------------+
+        |   Process B      |
+        |   (User Mode)    |
+        +------------------+
+#+end_src
+
+
+
+
+
+Memory Management (During Context Switch)
+The *kernel also manages memory* when switching from one process to another.
+Some important conditions must be followed.
+
+Important Conditions
+1. *Kernel Private Memory*
+   - The kernel must have its *own private memory area*.
+   - *User processes cannot access it*.
+2. *Separate Memory for Each Process*
+   - Every process gets *its own section of memory*.
+3. *Process Isolation*
+   - One process *cannot access the private memory of another process*.
+4. *Memory Sharing*
+   - Some memory can be *shared between processes* if needed.
+5. *Read-Only Memory*
+   - Some memory areas are *read-only*, meaning processes *can read but cannot modify* them.
+6. *Using Disk as Extra Memory*
+   + The system can use *disk space as additional memory* when RAM is not enough.
+   + This is called *virtual memory*.
+
+
+Virtual Memory and MMU
+Modern CPUs have a component called *Memory Management Unit (MMU)*.
+
+How It Works
+1. A process *does not access physical memory directly*.
+2. The kernel makes each process *feel like it has its own full memory*.
+3. When the process tries to access memory:
+   - The *MMU intercepts the request*.
+4. The MMU *translates the virtual address* (process view) into a *physical address* (actual RAM location).
+5. The kernel *creates and maintains the memory mapping*.
+
+
+
+Context Switch and Memory
+During a context switch:
+1. The kernel stops the current process.
+2. It changes the memory map from the old process.
+3. It loads the memory map of the new process.
+4. The new process then accesses its own memory space.
+
+
+Page Table
+- The structure used to store the memory address mapping is called a page table.
+
+#+begin_src
+Process (Virtual Address)
+        |
+        v
+      MMU
+(Address Translation)
+        |
+        v
+Physical Memory (RAM)
+#+end_src
+
+
+
+
+
+
+
+
+
+
+- *Subsequence*: characters skip ho sakte hai
+- *Substring*: characters continuous (contiguous) hone chahiye
+
+Example: *"ABC"*
+Subsequences: *A  B  C  AB  AC  BC  ABC*
+Substrings: *A  AB  ABC  B  BC  C*
+
+
+
++ String: ABC
++ Length: n = 3
+
+
+All Subsequences:
+#+begin_src
+A
+B
+C
+AB
+AC
+BC
+ABC
+#+end_src
+
+Total Subsequences, Power Set jaisa hai: 2^n = 2^3 = 8
+
+
+
+
+| *number* | *binary* | *subsequence* |
+|--------+--------+-------------|
+| *0*      | *000*    | *""*          |
+| *1*      | *001*    | *A*           |
+| *2*      | *010*    | *B*           |
+| *3*      | *011*    | *AB*          |
+| *4*      | *100*    | *C*           |
+| *5*      | *101*    | *AC*          |
+| *6*      | *110*    | *BC*          |
+| *7*      | *111*    | *ABC*         |
+
+
+Rule:
+#+begin_src c
+1 → character include
+0 → character skip
+#+end_src
+
+
+
+#+begin_src c
+#include <stdio.h>
+#include <string.h>
+
+int main() {
+  char str[] = "ABC";
+  int n = strlen(str);
+  int total = 1 << n;   // 2^n
+
+  for (int mask = 0; mask < total; mask++) {
+    for (int i = 0; i < n; i++) {
+      if (mask & (1 << i))
+	printf("%c", str[i]);
+    }
+    printf("\n");
+  }
+}
+#+end_src
+
+
+Visualization
+String: *"ABC"*
+Binary Mask:
+#+begin_src
+000 → ""
+001 → A
+010 → B
+011 → AB
+100 → C
+101 → AC
+110 → BC
+111 → ABC
+#+end_src
+
+Time Complexity: *O(n 2^n)*
+Outer loop: *O(2^n)*
+Inner loop: *O(n)*
+
+
+
+* Python *requests* Library
+
+Installation in Arch: ~sudo pacman -S python-requests~
+
+Basic Request
+#+begin_src python
+import requests
+
+url = "https://quotes.toscrape.com/"
+response = requests.get(url)
+
+print(response.status_code)    # HTTP status code (200 = OK)
+print(response.text[:500])     # First 500 chars of HTML
+#+end_src
+
+Extract Data (Quotes)
+#+begin_src python
+import requests
+from bs4 import BeautifulSoup
+
+url = "https://quotes.toscrape.com/"
+res = requests.get(url)
+
+soup = BeautifulSoup(res.text, "html.parser")
+quotes = soup.find_all("span", class_="text")
+
+for q in quotes:
+    print(q.text)
+#+end_src

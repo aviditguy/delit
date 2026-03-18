@@ -1,0 +1,636 @@
+
+
+
+
+Basic Drawing Text and Shapes
+#+begin_src c
+#include "raylib.h"
+
+#include "resource_dir.h"	// utility header for SearchAndSetResourceDir
+
+int main ()
+{
+  InitWindow(800, 450, "My Window");
+
+  SetExitKey(KEY_DELETE);
+  
+  while (!WindowShouldClose()){
+    BeginDrawing();
+    ClearBackground(RAYWHITE);
+
+    DrawCircle(400, 200, 50, RED);
+    DrawRectangle(200, 150, 100, 60, BLUE);
+    DrawLine(100, 100, 300, 200, BLACK);
+    DrawText("Hello Raylib!", 300, 200, 20, BLACK);
+    
+    EndDrawing();
+  }
+
+  CloseWindow();
+}
+#+end_src
+
+
+Moving Ball Animation
+#+begin_src c
+#include "raylib.h"
+
+#include "resource_dir.h"	// utility header for SearchAndSetResourceDir
+
+int main ()
+{
+  const int screenWidth = 800;
+  const int screenHeight = 450;
+
+  int ballX = 100, ballY = 200;
+  int dx = 2, dy = 2;
+  int rad = 30;
+
+  InitWindow(800, 450, "Moving Ball");
+  SetExitKey(KEY_DELETE);
+  SetTargetFPS(100);
+
+  while (!WindowShouldClose()){
+    ballX += dx;
+    ballY += dy;
+
+    if (ballX + rad >= screenWidth || ballX - rad <= 0)
+      dx *= -1;
+    if (ballY + rad >= screenHeight || ballY - rad <= 0)
+      dy *= -1;
+
+    BeginDrawing();
+    ClearBackground(RAYWHITE);
+
+    DrawCircle(ballX, ballY, rad, RED);
+    DrawText("Moving Ball Animation", 20, 20, 20, BLACK);
+    
+    EndDrawing();
+  }
+
+  CloseWindow();
+}
+#+end_src
+
+
+Keyboard + Mouse Input
+#+begin_src c
+#include "raylib.h"
+
+#include "resource_dir.h"	// utility header for SearchAndSetResourceDir
+
+int main () {
+  InitWindow(800, 450, "Raylib Rectangle Demo");
+  SetTargetFPS(60);
+  
+  Rectangle player1 = {100, 100, 60, 60};
+  Rectangle player2 = {0, 0, 40, 40};
+  float speed = 5.0f;
+
+  while (!WindowShouldClose()) {
+      // Arrow key movement
+      if (IsKeyDown(KEY_RIGHT)) player1.x += speed;
+      if (IsKeyDown(KEY_LEFT))  player1.x -= speed;
+      if (IsKeyDown(KEY_UP))    player1.y -= speed;
+      if (IsKeyDown(KEY_DOWN))  player1.y += speed;
+
+      // Mouse follow
+      Vector2 mousePos = GetMousePosition();
+      player2.x = mousePos.x - player2.width/2;
+      player2.y = mousePos.y - player2.height/2;
+
+      BeginDrawing();
+      ClearBackground(RAYWHITE);
+      
+      DrawText("Arrow Keys se rectangle move karo", 10, 10, 20, DARKGRAY);
+      DrawText("Mouse ko follow karta rectangle", 10, 40, 20, DARKGRAY);
+
+      DrawRectangleRec(player, BLUE);
+      DrawRectangleRec(mouseRect, RED);
+      
+      EndDrawing();
+  }
+
+  CloseWindow();
+}
+#+end_src
+
+
+
+#+begin_src c
+#include "raylib.h"
+
+#include "resource_dir.h" // utility header for SearchAndSetResourceDir
+#include <math.h>
+
+#define N 100
+
+int main() {
+  const int W = 800;
+  const int H = 450;
+  const int R = 8;
+
+  InitWindow(W, H, "100 Balls");
+  SetTargetFPS(60);
+
+  Vector2 pos[N];
+  Vector2 vel[N];
+
+  // init balls
+  for (int i = 0; i < N; i++) {
+    pos[i] = (Vector2){
+      GetRandomValue(R, W-R),
+      GetRandomValue(R, H-R)
+    };
+
+    vel[i] = (Vector2){
+      GetRandomValue(-3,3),
+      GetRandomValue(-3,3)
+    };
+  }
+
+  while (!WindowShouldClose()) {
+    // move balls
+    for (int i = 0; i < N; i++) {
+      pos[i].x += vel[i].x;
+      pos[i].y += vel[i].y;
+
+      if (pos[i].x < R || pos[i].x > W-R) vel[i].x *= -1;
+      if (pos[i].y < R || pos[i].y > H-R) vel[i].y *= -1;
+    }
+
+    // collision
+    for (int i = 0; i < N; i++) {
+      for (int j = i+1; j < N; j++) {
+        float dx = pos[i].x - pos[j].x;
+        float dy = pos[i].y - pos[j].y;
+
+        float dist = sqrt(dx*dx + dy*dy);
+
+        if (dist < R*2) {
+          Vector2 tmp = vel[i];
+          vel[i] = vel[j];
+          vel[j] = tmp;
+        }
+      }
+    }
+
+    BeginDrawing();
+    ClearBackground(RAYWHITE);
+
+    for (int i = 0; i < N; i++)
+      DrawCircleV(pos[i], R, BLUE);
+    DrawText("100 Balls", 20, 20, 20, BLACK);
+
+    EndDrawing();
+  }
+
+  CloseWindow();
+}
+#+end_src
+
+
+
+Image Displaying
+#+begin_src c
+#include "raylib.h"
+#include "resource_dir.h" // utility header for SearchAndSetResourceDir
+
+int main(void) {
+  InitWindow(800, 600, "Carousel");
+  SetTargetFPS(60);
+
+  Texture2D img = LoadTexture("resources/img1.png");
+
+  while (!WindowShouldClose()) {
+    BeginDrawing();
+    ClearBackground(RAYWHITE);
+
+    DrawTexture(img, 0, 0, WHITE);
+    EndDrawing();
+  }
+
+  UnloadTexture(img);
+  CloseWindow();
+}
+#+end_src
+
+~void DrawTexture(Texture2D texture, int posX, int posY, Color tint);~
++ *int posX, posY* image ko top-left corner ka position
++ *Color tint* Image ke upar color overlay apply karta hai. WHITE me image original rahegi.
++ Ye color ko hum *rgba* me likh sakte hai:
+  + *Color c = (Color){255, 255, 255, 128}; // 50% transparent*
+
+Image Resizing / Scaling
+#+begin_src c
+#include "raylib.h"
+#include "resource_dir.h" // utility header for SearchAndSetResourceDir
+
+int main(void) {
+  InitWindow(800, 600, "Carousel");
+  SetTargetFPS(60);
+
+  Texture2D img = LoadTexture("resources/img1.png");
+
+  while (!WindowShouldClose()) {
+    BeginDrawing();
+    ClearBackground(RAYWHITE);
+
+    float scaleX = (float)GetScreenWidth() / img.width;
+    float scaleY = (float)GetScreenHeight() / img.height;
+    float scale = scaleX < scaleY ? scaleX : scaleY;
+
+    float x = (GetScreenWidth() - img.width * scale) / 2;
+    float y = (GetScreenHeight() - img.height * scale) / 2;
+
+    DrawTextureEx(img, (Vector2){x, y}, 0.0f, scale, WHITE);
+    EndDrawing();
+  }
+
+  UnloadTexture(img);
+  CloseWindow();
+}
+#+end_src
+
+~void DrawTextureEx(Texture2D texture, Vector2 position, float rotation, float scale, Color tint);~
++ *Vector2 position* Ye *2D coordinate (x, y)* specify karta hai jahan image draw hogi.
++ *float rotation* Image kitne degree rotate hogi. *0.0f* → no rotation, and *45.0f → 45°* clockwise rotation
++ *float scale* Image ko resize karne ke liye multiplier. *1.0f* → original size, *0.5f* → half size, and, *2.0f* → double size
+
+
+
+
+Simple Image Carousel
+#+begin_src c
+#include "raylib.h"
+#include "resource_dir.h" // utility header for SearchAndSetResourceDir
+
+#define IMAGE_COUNT 3
+
+int main(void) {
+    int current = 0;
+    
+    InitWindow(800, 600, "Raylib Image Carousel");
+    SetTargetFPS(60);
+    
+    Texture2D images[IMAGE_COUNT];
+    images[0] = LoadTexture("resources/img1.png");
+    images[1] = LoadTexture("resources/img2.png");
+    images[2] = LoadTexture("resources/img3.png");
+
+    while (!WindowShouldClose()) {
+        // Change image
+        if (IsKeyPressed(KEY_RIGHT)) current = (current + 1) % IMAGE_COUNT;
+        if (IsKeyPressed(KEY_LEFT))  current = (current - 1 + IMAGE_COUNT) % IMAGE_COUNT;
+
+        BeginDrawing();
+        ClearBackground(RAYWHITE);
+
+        // Fit image to window keeping aspect ratio
+        float scaleX = (float)GetScreenWidth() / images[current].width;
+        float scaleY = (float)GetScreenHeight() / images[current].height;
+        float scale = scaleX < scaleY ? scaleX : scaleY;
+        float x = (GetScreenWidth() - images[current].width * scale) / 2;
+        float y = (GetScreenHeight() - images[current].height * scale) / 2;
+
+        DrawTextureEx(images[current], (Vector2){x, y}, 0.0f, scale, WHITE);
+
+        DrawText("Left / Right Arrow to change image", 20, 20, 20, DARKGRAY);
+
+        EndDrawing();
+    }
+
+    for (int i = 0; i < IMAGE_COUNT; i++)
+        UnloadTexture(images[i]);
+
+    CloseWindow();
+}
+#+end_src
+
+Adding Sliding Effect in Carousel
+#+begin_src c
+#include "raylib.h"
+#include "resource_dir.h" // utility header for SearchAndSetResourceDir
+
+#define IMAGE_COUNT 3
+#define SLIDE_SPEED 800.0f // pixels per second
+
+int main(void) {
+    int current = 0;
+    int next = 0;
+    float offsetX = 0.0f;    // current slide offset
+    int direction = 0;       // -1 left, 1 right, 0 idle
+
+    InitWindow(800, 600, "Sliding Image Carousel");
+    SetTargetFPS(60);
+
+    Texture2D images[IMAGE_COUNT];
+    images[0] = LoadTexture("resources/img1.png");
+    images[1] = LoadTexture("resources/img2.png");
+    images[2] = LoadTexture("resources/img3.png");
+
+    while (!WindowShouldClose()) {
+        float dt = GetFrameTime();
+
+        // Input
+        if (direction == 0) { // only accept input if not sliding
+            if (IsKeyPressed(KEY_RIGHT)) {
+                next = (current + 1) % IMAGE_COUNT;
+                direction = -1; // slide left
+            }
+            if (IsKeyPressed(KEY_LEFT)) {
+                next = (current - 1 + IMAGE_COUNT) % IMAGE_COUNT;
+                direction = 1; // slide right
+            }
+        }
+
+        // Update sliding
+        if (direction != 0) {
+            offsetX += direction * SLIDE_SPEED * dt;
+
+            // Check if slide complete
+            if (direction == -1 && offsetX <= -GetScreenWidth()) { // left slide
+                offsetX = 0;
+                current = next;
+                direction = 0;
+            }
+            if (direction == 1 && offsetX >= GetScreenWidth()) { // right slide
+              offsetX = 0;
+                current = next;
+                direction = 0;
+            }
+        }
+
+        BeginDrawing();
+        ClearBackground(RAYWHITE);
+
+        // Draw current and next image
+        for (int i = 0; i < 2; i++) {
+            int idx = (i == 0) ? current : next;
+            float xPos = (i == 0) ? offsetX : offsetX + (direction == -1 ? GetScreenWidth() : -GetScreenWidth());
+
+            // Fit image to window keeping aspect ratio
+            float scaleX = (float)GetScreenWidth() / images[idx].width;
+            float scaleY = (float)GetScreenHeight() / images[idx].height;
+            float scale = scaleX < scaleY ? scaleX : scaleY;
+            float x = xPos + (GetScreenWidth() - images[idx].width * scale) / 2;
+            float y = (GetScreenHeight() - images[idx].height * scale) / 2;
+
+            DrawTextureEx(images[idx], (Vector2){x, y}, 0.0f, scale, WHITE);
+        }
+
+        DrawText("Left / Right Arrow to slide", 20, 20, 20, DARKGRAY);
+
+        EndDrawing();
+    }
+
+    for (int i = 0; i < IMAGE_COUNT; i++)
+        UnloadTexture(images[i]);
+
+    CloseWindow();
+}
+#+end_src
+
+
+Auto Slide
+#+begin_src c
+#include "raylib.h"
+#include "resource_dir.h" // utility header for SearchAndSetResourceDir
+
+#define IMAGE_COUNT 3
+#define SLIDE_SPEED 800.0f
+#define AUTO_TIME 3.0f   // auto slide every 3 seconds
+
+int main(void)
+{
+    InitWindow(800, 600, "Sliding Carousel Auto");
+
+    Texture2D images[IMAGE_COUNT];
+    images[0] = LoadTexture("resources/img1.png");
+    images[1] = LoadTexture("resources/img2.png");
+    images[2] = LoadTexture("resources/img3.png");
+
+    int current = 0;
+    int next = 0;
+
+    float offsetX = 0;
+    int direction = 0;
+
+    float timer = 0;
+
+    SetTargetFPS(60);
+
+    while (!WindowShouldClose())
+    {
+        float dt = GetFrameTime();
+        timer += dt;
+
+        // Manual control
+        if (direction == 0)
+        {
+            if (IsKeyPressed(KEY_RIGHT))
+            {
+                next = (current + 1) % IMAGE_COUNT;
+                direction = -1;
+                timer = 0;
+            }
+
+            if (IsKeyPressed(KEY_LEFT))
+            {
+                next = (current - 1 + IMAGE_COUNT) % IMAGE_COUNT;
+                direction = 1;
+                timer = 0;
+            }
+        }
+
+        // AUTO SLIDE
+        if (timer >= AUTO_TIME && direction == 0)
+        {
+            next = (current + 1) % IMAGE_COUNT;
+            direction = -1;
+            timer = 0;
+        }
+
+        // Sliding animation
+        if (direction != 0)
+        {
+            offsetX += direction * SLIDE_SPEED * dt;
+
+            if (direction == -1 && offsetX <= -GetScreenWidth())
+            {
+                offsetX = 0;
+                current = next;
+                direction = 0;
+            }
+
+            if (direction == 1 && offsetX >= GetScreenWidth())
+            {
+                offsetX = 0;
+                current = next;
+                direction = 0;
+            }
+        }
+
+        BeginDrawing();
+        ClearBackground(RAYWHITE);
+
+        for (int i = 0; i < 2; i++)
+        {
+            int idx = (i == 0) ? current : next;
+
+            float xPos = (i == 0)
+                ? offsetX
+                : offsetX + (direction == -1 ? GetScreenWidth() : -GetScreenWidth());
+
+            float scaleX = (float)GetScreenWidth() / images[idx].width;
+            float scaleY = (float)GetScreenHeight() / images[idx].height;
+            float scale = scaleX < scaleY ? scaleX : scaleY;
+
+            float x = xPos + (GetScreenWidth() - images[idx].width * scale) / 2;
+            float y = (GetScreenHeight() - images[idx].height * scale) / 2;
+
+            DrawTextureEx(images[idx], (Vector2){x, y}, 0, scale, WHITE);
+        }
+
+        DrawText("Left / Right Arrow or wait for auto-slide", 20, 20, 20, DARKGRAY);
+
+        EndDrawing();
+    }
+
+    for (int i = 0; i < IMAGE_COUNT; i++)
+        UnloadTexture(images[i]);
+
+    CloseWindow();
+}
+#+end_src
+
+
+Added Bottom Indicators
+#+begin_src c
+#include "raylib.h"
+#include "resource_dir.h" // utility header for SearchAndSetResourceDir
+
+#define IMAGE_COUNT 3
+#define SLIDE_SPEED 800.0f
+#define AUTO_TIME 3.0f   // auto slide every 3 seconds
+
+int main(void)
+{
+    InitWindow(800, 600, "Sliding Carousel Auto");
+
+    Texture2D images[IMAGE_COUNT];
+    images[0] = LoadTexture("resources/img1.png");
+    images[1] = LoadTexture("resources/img2.png");
+    images[2] = LoadTexture("resources/img3.png");
+
+    int current = 0;
+    int next = 0;
+
+    float offsetX = 0;
+    int direction = 0;
+
+    float timer = 0;
+
+    SetTargetFPS(60);
+
+    while (!WindowShouldClose())
+    {
+        float dt = GetFrameTime();
+        timer += dt;
+
+        // Manual control
+        if (direction == 0)
+        {
+            if (IsKeyPressed(KEY_RIGHT))
+            {
+                next = (current + 1) % IMAGE_COUNT;
+                direction = -1;
+                timer = 0;
+            }
+
+            if (IsKeyPressed(KEY_LEFT))
+            {
+                next = (current - 1 + IMAGE_COUNT) % IMAGE_COUNT;
+                direction = 1;
+                timer = 0;
+            }
+        }
+
+        // AUTO SLIDE
+        if (timer >= AUTO_TIME && direction == 0)
+        {
+            next = (current + 1) % IMAGE_COUNT;
+            direction = -1;
+            timer = 0;
+        }
+
+        // Sliding animation
+        if (direction != 0)
+        {
+            offsetX += direction * SLIDE_SPEED * dt;
+
+            if (direction == -1 && offsetX <= -GetScreenWidth())
+            {
+                offsetX = 0;
+                current = next;
+                direction = 0;
+            }
+
+            if (direction == 1 && offsetX >= GetScreenWidth())
+            {
+                offsetX = 0;
+                current = next;
+                direction = 0;
+            }
+        }
+
+        BeginDrawing();
+        ClearBackground(RAYWHITE);
+
+        for (int i = 0; i < 2; i++)
+        {
+            int idx = (i == 0) ? current : next;
+
+            float xPos = (i == 0)
+                ? offsetX
+                : offsetX + (direction == -1 ? GetScreenWidth() : -GetScreenWidth());
+
+            float scaleX = (float)GetScreenWidth() / images[idx].width;
+            float scaleY = (float)GetScreenHeight() / images[idx].height;
+            float scale = scaleX < scaleY ? scaleX : scaleY;
+
+            float x = xPos + (GetScreenWidth() - images[idx].width * scale) / 2;
+            float y = (GetScreenHeight() - images[idx].height * scale) / 2;
+
+            DrawTextureEx(images[idx], (Vector2){x, y}, 0, scale, WHITE);
+        }
+
+
+        // ---- DOTS INDICATOR ----
+        float dotRadius = 6;
+        float spacing = 20;
+        float totalWidth = IMAGE_COUNT * spacing;
+        float startX = GetScreenWidth()/2 - totalWidth/2;
+        float y = GetScreenHeight() - 40;
+
+        for (int i = 0; i < IMAGE_COUNT; i++)
+        {
+            float x = startX + i * spacing;
+
+            if (i == current)
+                DrawCircle(x, y, dotRadius, DARKBLUE);
+            else
+                DrawCircle(x, y, dotRadius, LIGHTGRAY);
+        }
+
+        DrawText("Left / Right Arrow or wait for auto-slide", 20, 20, 20, DARKGRAY);
+
+        EndDrawing();
+    }
+
+    for (int i = 0; i < IMAGE_COUNT; i++)
+        UnloadTexture(images[i]);
+
+    CloseWindow();
+}
+#+end_src

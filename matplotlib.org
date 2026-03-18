@@ -1,0 +1,8 @@
+
+
+#+begin_src python
+import matplotlib.pyplot as plt
+import numpy as np
+
+x = np.arange(1, 20)
+#+end_src

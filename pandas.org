@@ -1,0 +1,186 @@
+
+
+
+Arch me Install: ~sudo pacman -S python-pandas~
+
+#+begin_src python
+import pandas as pd
+#+end_src
+
+Series
+Pandas me *Series* sabse basic data structure hota hai.
+*Series = 1-Dimensional labeled array*
+
+Series me 2 cheeze hoti hai:
++ *Index* → position / label
++ *Value* → actual data
+
+#+begin_src python
+pd.Series([10, 20, 30])
+pd.Series([10, 20, 30], index=["a", "b", "c"])
+#+end_src
+
+Accessing Values
+#+begin_src python
+s = pd.Series([10, 20, 30])
+print(s[0], s[2])
+
+s = pd.Series([10, 20, 30], index=["a", "b", "c"])
+print(s["a"], s["c"])
+#+end_src
+
+Create Series Object from a Dictionary
+#+begin_src python
+ages = {
+    "Rohan": 30,
+    "Sanjay": 23,
+    "Kapil": 32
+}
+pd.Series(ages)
+#+end_src
+
+Series ke Common Functions
+#+begin_src python
+s = pd.Series([10, 20, 30])
+
+s.mean()
+s.max()
+s.min()
+s.sum()
+s.product()
+
+s.sort_values()
+s.sort_values(ascending=False)
+
+s.sort_index()
+s.sort_index(ascending=False)
+#+end_src
+
+Pandas Series ke Common Attributes
+Attributes are not functions but properties stored inside object.
+They give additional info about the object.
+#+begin_src python
+s = pd.Series([10, 20, 30], name="Numbers", index=["a", "b", "c"], dtype="float")
+
+s.size
+s.shape
+s.dtype
+s.name
+s.is_unique
+
+s.index
+s.values
+#+end_src
+
+Sorting
+#+begin_src python
+s = pd.Series([10, 20, 30], index=["a", "b", "c"])
+
+s.sort_values()
+s.sort_values(ascending=False)
+
+s.sort_index()
+s.sort_index(ascending=False)
+#+end_src
+
+Pandas rely on numpy to store its data
+#+begin_src python
+s = pd.Series([10, 20, 30])
+type(s.values)
+type(s.index)
+#+end_src
+
+
+#+begin_src python
+df = pd.read_csv("assets/students.csv")
+type(df)
+df
+#+end_src
+
+#+begin_src python
+df.head()    # default 5
+df.tail()
+
+df.head(10)
+df.tail(10)
+#+end_src
+
+#+begin_src python
+pd.read_csv("assets/students.csv", index_col="name")
+pd.read_csv("assets/students.csv", usecols=["name", "age"])
+pd.read_csv("assets/students.csv", nrows=2)
+pd.read_csv("assets/students.csv", skiprows=1)
+#+end_src
+
+#+begin_src python
+pd.read_csv("assets/students.csv", usecols=["marks"]).squeeze("columns")
+#+end_src
+
+
+Pandas Dataframes works well with Python's built-in functions
+#+begin_src python
+marks = pd.read_csv("assets/students.csv", usecols=["marks"]).squeeze("columns")
+
+len(marks)
+type(marks)
+list(marks)
+dict(marks)
+max(marks)
+min(marks)
+sorted(marks)
+#+end_src
+
+Check if value in Dataframe
+#+begin_src python
+marks = pd.read_csv("assets/students.csv", usecols=["marks"]).squeeze("columns").head()
+marks
+
+88 in marks
+2 in marks
+2 in marks.index
+
+88 in marks.values
+#+end_src
+
+#+begin_src python
+data = pd.read_csv("assets/students.csv", index_col="name").squeeze("columns")
+
+data.sort_index()
+data.sort_index(ascending=False)
+#+end_src
+
+
+
+
+
+
+
+
+* Pandas
+
+The *pandas* library is useful for dealing with structured data.
+Structured Data is that is stored in tables, such as CSV files, Excel spreadsheets, or database tables.
+
+#+begin_src python
+import pandas as pd
+#+end_src
+
+Pandas me 3 main *Data Structures* hai:
+1. *pd.Series* is a *1D* collection of data. Each pd.Series has a homogeneous data type.
+#+begin_src python
+pd.Series([10, 20, 30])
+#+end_src
+   
+2. *pd.DataFrame* is a *2D* dimensional object. Like Excel sheet or database table.
+   *pd.DataFrame* can be though of as a collection of *pd.Series* objects.
+   and different *Series* can have different data types, so *pd.DataFrame* can be heterogeneous.
+#+begin_src python
+
+#+end_src
+
+
+3. *pd.Index*
+
+
+pd.Series 
+pd.DataFrame 

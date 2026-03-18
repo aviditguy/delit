@@ -1,0 +1,678 @@
+
+* Numpy Guide
+
+*NumPy* ek Python library hai jo *high-performance numerical computing* ke liye use hoti hai.
+Yeh *multi-dimensional arrays (ndarray)* aur *matrix operations* ko efficiently handle karta hai.
+
+- arch me install: ~sudo pacman -S python-numpy~
+
+*Use Cases:*
+- Data Analysis
+- Scientific Computing
+- Machine Learning & AI
+- Image Processing & Computer Vision
+
+  
+** Import the library
+#+begin_src python
+import numpy as np
+#+end_src
+
+
+** Creating Numpy Arrays from Lists
+#+begin_src python
+np.array([1, 2, 3])
+
+np.array(['this', 'is', 'a', 'vector'])
+
+np.array([[1, 2, 3], [4, 5, 6]])
+#+end_src
+
+
+** Array Properties
+#+begin_src python
+a = np.array([1, 2, 3])
+a.shape
+a.ndim
+a.size
+a.dtype
+
+a = np.array([[1.2, 1.3], [2.2, 2.3]])
+print(a.shape, a.ndim, a.size, a.dtype)
+#+end_src
+
+
+** Array Indexing and Slicing
+#+begin_src python
+a = np.array([1,2,3,4,5,6])
+a[0]
+a[-1]
+
+a[2:]
+a[:3]
+a[::-1]
+#+end_src
+
+
+** Special Arrays
+*** Creating Zeros and Ones Array
+#+begin_src python
+np.zeros(3)
+np.zeros((3, 3))
+
+np.ones(3)
+np.ones((2, 3), dtype="int32")
+#+end_src
+
+*** Get a Range of Numbers
+#+begin_src python
+np.arange(0, 5)
+np.arange(0, 11, 2)
+#+end_src
+
+*** Evenly Divide a Range of Numbers
+#+begin_src python
+np.linspace(0, 1, 10)
+np.linspace(0, 10, 5)
+#+end_src
+
+*** Arrays filled with Random Numbers
++ *rand(size, ...)*             Range: 0 se 1 ke beech (uniform distribution)
++ *randn(size, ...)*            Distribution: Normal / Gaussian distribution
++ *randint(low, high, size)*    Random integers deta hai
+#+begin_src python
+np.random.rand(3)
+np.random.rand(3, 2)
+np.random.rand(3, 2, 2)
+
+# array of size 15 in range 0 >= x < 5
+np.random.randint(0, 5, 15)
+#+end_src
+
+[[file:./assets/rand_vs_randn.png][Visualization of rand vs randn]]
+
+
+** NumPy *vectorized operations* karta hai
+#+begin_src python
+a = np.array([1, 2, 3])
+b = np.array([4, 5, 6])
+
+a + 2
+
+a + b
+a * b
+a - b
+a / b
+#+end_src
+
+
+** Common Math Functions
+#+begin_src python
+a = np.array([1, 2, 3, 4])
+
+np.sum(a)
+np.mean(a)
+np.max(a)
+np.min(a)
+np.sqrt(a)
+np.log(a)
+np.sin(a)
+#+end_src
+
+
+** Matrix Operations
+#+begin_src python
+# Identity matrix
+np.eye(5)
+
+# 2x3 matrix
+a = np.array([[1, 2, 3],
+              [4, 5, 6]])
+
+# 3x2 matrix
+b = np.array([[7, 8],
+             [9, 10],
+             [11, 12]])
+
+# matrix Transpose
+a.T
+
+# matrix multiplication
+np.dot(a, b)
+a @ b
+#+end_src
+
+*** Inverse and Determinant (for square matrices)
+#+begin_src python
+a = np.array([[1, 2],
+              [3, 4]])
+
+np.linalg.det(a)
+np.linalg.inv(a)
+#+end_src
+
+*** Eigenvalues & Eigenvectors
+#+begin_src python
+np.linalg.eig(a)
+#+end_src
+
+
+
+#+begin_src python
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.image import imread
+
+plt.ion()
+
+# 1️⃣ Image Load karo
+img = imread('./assets/numpy_img.jpg')  # example URL
+plt.imshow(img)
+plt.show()
+
+plt.imshow(img[100:400,:,:])
+
+# Brightness Increase
+img_float = img.astype(float)
+brighter_img = np.clip(img_float * 1.5, 0, 1)  # multiply to increase brightness, clip to stay in valid range
+plt.imshow(brighter_img)
+
+# Color Inversion
+inverted_img = 1 - brighter_img
+im_display.set_data(inverted_img)
+plt.imshow(brighter_img)
+plt.draw()
+
+# 4️⃣ Another Example: Image Inversion
+inverted_img = 1 - img_float  # simple matrix operation
+plt.figure(figsize=(6,6))
+plt.imshow(inverted_img)
+plt.title("Inverted Image")
+plt.axis('off')
+plt.show()
+#+end_src
+
+
+
+* Matplotlib
+
+** Simple Plotting Example
+#+begin_src python
+import matplotlib.pyplot as plt
+
+days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+temp = [22, 24, 21, 23, 25, 27, 26]
+
+plt.plot(days, temp)
+plt.show()
+#+end_src
+
+** Plot Multiple Lines
+#+begin_src python
+import matplotlib.pyplot as plt
+
+days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+temp1 = [22, 24, 21, 23, 25, 27, 26]
+temp2 = [30, 26, 18, 17, 20, 25, 15]
+
+plt.plot(days, temp1)
+plt.plot(days, temp2)
+plt.show()
+#+end_src
+
+** Labels & Styling
+#+begin_src python
+import matplotlib.pyplot as plt
+
+days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+temp1 = [22, 24, 21, 23, 25, 27, 26]
+temp2 = [30, 26, 18, 17, 20, 25, 15]
+
+plt.title("Temperature Over a Week")
+plt.xlabel("Days")
+plt.ylabel("Temperature (°C)")
+plt.grid(True)
+
+plt.plot(days, temp1, linestyle="--", linewidth=4)
+plt.plot(days, temp2, color="red", marker='o')
+plt.show()
+#+end_src
+
+** Saving and Exporting Plots
+#+begin_src python
+import matplotlib.pyplot as plt
+
+days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+temp = [22, 24, 21, 23, 25, 27, 26]
+
+plt.plot(days, temp)
+plt.savefig("basic.png")
+plt.savefig("basic.pdf")
+plt.savefig("basic.jpeg", dpi=300)  # High reslution JPEG
+plt.savefig("basic_transparent.png", dpi=300, transparent=True)
+#+end_src
+
+** Common Plots
+
+*** Line Plots
+Line plots are ideal for visualizing trends over time or continuous data.
+For example, tracking the monthly sales of a product:
+#+begin_src python
+import matplotlib.pyplot as plt
+
+months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+sales = [120, 150, 170, 160, 180, 200, 210, 190, 220, 230, 250, 240]
+
+plt.plot(months, sales)
+
+plt.title("Monthly Sales of Product A")
+plt.xlabel("Months")
+plt.ylabel("Units Sold")
+plt.show()
+#+end_src
+
+*** Bar Charts
++ Categories ke comparison – jaise product sales, student scores, region-wise revenue
++ Discrete data – numbers continuous nahi hote
++ Single or multiple series – ek ya zyada categories ka comparison
+
+Tip: Continuous data ke liye line plot better hai; discrete/categorical ke liye bar chart best.
+
+**** Simple Bar Chart Example
+#+begin_src python
+import matplotlib.pyplot as plt
+
+products = ['Product A', 'Product B', 'Product C', 'Product D']
+sales = [250, 180, 300, 220]
+
+plt.bar(products, sales, color='skyblue')
+
+plt.title("Sales of Products")
+plt.xlabel("Products")
+plt.ylabel("Units Sold")
+plt.show()
+#+end_src
+
+**** Horizontal Bar Chart
+Instead of *plt.bar()* do *plt.barh()*
+#+begin_src python
+import matplotlib.pyplot as plt
+
+products = ['Product A', 'Product B', 'Product C', 'Product D']
+sales = [250, 180, 300, 220]
+
+plt.barh(products, sales, color='skyblue')
+
+plt.title("Sales of Products")
+plt.xlabel("Products")
+plt.ylabel("Units Sold")
+plt.show()
+#+end_src
+
+**** Multiple Series Comparison (Grouped Bar Chart)
+#+begin_src python
+import matplotlib.pyplot as plt
+import numpy as np
+
+months = ['Jan', 'Feb', 'Mar', 'Apr']
+sales_A = [120, 150, 170, 160]
+sales_B = [100, 130, 160, 150]
+
+x = np.arange(len(months))  # positions on x-axis
+width = 0.35  # width of bars
+
+plt.bar(x - width/2, sales_A, width, label='Product A', color='blue')
+plt.bar(x + width/2, sales_B, width, label='Product B', color='green')
+
+plt.xticks(x, months)
+plt.xlabel("Months")
+plt.ylabel("Units Sold")
+plt.title("Monthly Sales Comparison")
+plt.legend()
+plt.show()
+#+end_src
+
+*** Histograms
++ Data distribution check karna – jaise exam scores, heights, weights
++ Frequency analysis – kitni values kis range me fall karti hain
++ Compare multiple datasets – overlay multiple histograms
+
+Tip: Histogram line plot ya bar chart nahi hai; yeh bins (ranges) me values ko count karke show karta hai.
+
+**** Simple Histogram Example
+#+begin_src python
+import matplotlib.pyplot as plt
+
+scores = [55, 60, 72, 90, 66, 75, 80, 85, 92, 70, 68, 78, 88, 95, 62, 77]
+plt.hist(scores, bins=5, color='skyblue', edgecolor='black')
+
+plt.title("Distribution of Exam Scores")
+plt.xlabel("Score Range")
+plt.ylabel("Number of Students")
+plt.show()
+#+end_src
+
+*** Pie Charts
++ Proportion/percentage dikhana – jaise sales contribution, market share
++ Discrete categories – jaise products, regions, grades
++ Single dataset – Pie charts usually single variable ke liye use hote hain
+
+Tip: Agar categories bahut zyada hain, pie chart confusing ho sakta hai.
+
+**** Simple Pie Chart
+#+begin_src python
+import matplotlib.pyplot as plt
+
+products = ['Product A', 'Product B', 'Product C', 'Product D']
+sales = [250, 180, 300, 220]
+
+plt.title("Sales Distribution of Products")
+plt.pie(sales, labels=products, autopct='%1.1f%%', startangle=90)
+plt.show()
+#+end_src
+- *labels=products*   → Each slice labelled
+- *autopct='%1.1f%%'* → Shows percentage on each slice
+- *startangle=90*     → Rotate chart for better start orientation
+
+**** Pie Chart with Explode (Highlight a Slice)
+#+begin_src python
+import matplotlib.pyplot as plt
+
+products = ['Product A', 'Product B', 'Product C', 'Product D']
+sales = [250, 180, 300, 220]
+explode = (0, 0, 0.1, 0)  # 3rd slice (Product C) slightly pulled out
+
+plt.pie(sales, labels=products, autopct='%1.1f%%', startangle=90, explode=explode, shadow=True)
+plt.title("Sales Distribution with Highlight")
+plt.show()
+#+end_src
+- *explode*     → Highlight a specific slice
+- *shadow=True* → Adds subtle 3D effect
+
+
+**** Custom Coloring
+#+begin_src python
+import matplotlib.pyplot as plt
+
+products = ['Product A', 'Product B', 'Product C', 'Product D']
+sales = [250, 180, 300, 220]
+colors = ['gold', 'lightcoral', 'lightskyblue', 'lightgreen']
+
+plt.pie(sales, labels=products, autopct='%1.1f%%', startangle=90, colors=colors, shadow=True)
+plt.title("Sales Distribution with Colors")
+plt.show()
+#+end_src
+
+
+*** Scatter Plots
+
+#+begin_src python
+import matplotlib.pyplot as plt
+
+x = [1, 2, 3, 4, 5, 6, 7, 8]
+y = [2, 3, 4, 5, 7, 6, 8, 9]
+
+plt.scatter(x, y, color='red')
+
+plt.title("Simple Scatter Plot")
+plt.xlabel("X-axis")
+plt.ylabel("Y-axis")
+plt.grid(True)
+plt.show()
+#+end_src
+
+**** Scatter Plot with Size and Color Variation
+#+begin_src python
+import matplotlib.pyplot as plt
+
+x = [1, 2, 3, 4, 5, 6, 7, 8]
+y = [2, 3, 4, 5, 7, 6, 8, 9]
+sizes = [50, 80, 100, 120, 90, 60, 110, 70]  # size of points
+colors = [10, 20, 30, 40, 50, 60, 70, 80]   # color intensity
+
+plt.scatter(x, y, s=sizes, c=colors, cmap='viridis', alpha=0.7)
+plt.title("Scatter Plot with Sizes & Colors")
+plt.xlabel("X-axis")
+plt.ylabel("Y-axis")
+plt.colorbar(label='Color Intensity')
+plt.show()
+#+end_src
+- *s=sizes*        → change point sizes
+- *c=colors*       → map color of points
+- *cmap='viridis'* → color map
+- *alpha=0.7*      → transparency
+
+**** Multiple Series
+#+begin_src python
+import matplotlib.pyplot as plt
+
+x1 = [1, 2, 3, 4, 5]
+y1 = [2, 3, 4, 5, 6]
+
+x2 = [1, 2, 3, 4, 5]
+y2 = [5, 4, 3, 2, 1]
+
+plt.scatter(x1, y1, color='blue', label='Group 1')
+plt.scatter(x2, y2, color='green', label='Group 2')
+
+plt.title("Multiple Series Scatter Plot")
+plt.xlabel("X-axis")
+plt.ylabel("Y-axis")
+plt.legend()
+plt.grid(True)
+plt.show()
+#+end_src
+
+** Subplots
+1. *Multiple related plots* ek hi figure me compare karne ke liye
+2. *Different types of plots* ek hi dashboard jaisa layout banane ke liye
+3. *Space saving* – alag-alag plots ko ek hi figure me combine
+
+*** Basic Subplots
+#+begin_src python
+import matplotlib.pyplot as plt
+
+x = [1, 2, 3, 4, 5]
+y1 = [1, 4, 9, 16, 25]
+y2 = [25, 20, 15, 10, 5]
+
+# Create 1 row, 2 columns subplots
+plt.subplot(1, 2, 1)  # row=1, col=2, plot 1
+plt.plot(x, y1, color='blue', marker='o')
+plt.title("Square Numbers")
+
+plt.subplot(1, 2, 2)  # row=1, col=2, plot 2
+plt.plot(x, y2, color='red', marker='x')
+plt.title("Decreasing Numbers")
+
+plt.tight_layout()  # avoid overlap
+plt.show()
+#+end_src
+- *plt.subplot(rows, cols, index)* → choose plot position
+- *tight_layout()* → ensures titles/labels don’t overlap
+- Multiple types of plots ek figure me
+
+*** 2 Rows, 2 Columns Subplots with Different Plot Types
+#+begin_src python
+import matplotlib.pyplot as plt
+
+x = [1, 2, 3, 4, 5]
+y = [2, 3, 5, 7, 11]
+
+plt.figure(figsize=(10,8))
+
+# Line plot
+plt.subplot(2, 2, 1)
+plt.plot(x, y, color='blue', marker='o')
+plt.title("Line Plot")
+
+# Bar plot
+plt.subplot(2, 2, 2)
+plt.bar(['A','B','C','D','E'], y, color='green')
+plt.title("Bar Plot")
+
+# Histogram
+plt.subplot(2, 2, 3)
+plt.hist([1,2,2,3,3,3,4,4,5], bins=5, color='orange', edgecolor='black')
+plt.title("Histogram")
+
+# Scatter plot
+plt.subplot(2, 2, 4)
+plt.scatter(x, y, color='red', s=100)
+plt.title("Scatter Plot")
+
+plt.tight_layout()
+plt.show()
+#+end_src
+
+
+
+Statistical Data Visualization
+Statistical plots big datasets ko *summarize aur samajhne* me help karta hai.
+In plots se hum data ka *distribution, spread aur important statistics* aasani se dekh sakte hai.
+
+Box Plot
+Box plot ek statistical plot hai jo data ka distribution *five-number summary* ke aadhar par dikhata hai.
+5 number summary me ye values hoti hai:
++ *Minimum* – data ki sabse smallest value
++ *First Quartile (Q1)* – 25% data isse neeche hota hai
++ *Median (Q2)* – data ka middle value
++ *Third Quartile (Q3)* – 75% data isse neeche hota hai
++ *Maximum* – data ka biggest value
+
+Isse hame pata chalta hai ki *dat kitna spread hai, meadian kaha hai aur outlier hai ya nahi*.
+
+Simple Box Plot Example
+#+begin_src python
+import matplotlib.pyplot as plt
+
+scores = [55, 60, 72, 90, 66, 75, 80, 85, 92, 70, 68, 78, 88, 95, 62, 77]
+
+plt.boxplot(scores)
+
+plt.title("Box Plot of Exam Scores")
+plt.ylabel("Scores")
+plt.show()
+#+end_src
+- *Box* → middle 50% of data (Q1 to Q3)
+- *Line inside box* → median
+- *Whiskers* → minimum and maximum (excluding outliers)
+- *Dots outside whiskers* → outliers
+
+
+Box Plot with Multiple Datasets
+#+begin_src python
+import matplotlib.pyplot as plt
+
+scores_A = [55, 60, 72, 90, 66, 75, 80, 85]
+scores_B = [62, 77, 88, 92, 68, 78, 95, 70]
+
+plt.boxplot([scores_A, scores_B], tick_labels=['Class A', 'Class B'])
+
+plt.title("Exam Score Comparison")
+plt.ylabel("Scores")
+plt.show()
+#+end_src
+
+
+
+
+
+Animations
+Animations use karke hum plots ko time ke saath change hote hue dikha sakte hai.
+ye useful hai jab data dynamic ho ya kisi process ka progress dikhana ho.
+
+When to use Animations?
++ *Time-based data* dikhane ke liye (like stock price change)
++ *Simulation ya process* dikhane ke liye
++ *Data changes over time* visualize karne ke liye
+
+
+
+Line Drawing Animation
+#+begin_src python
+import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
+
+x = [1,2,3,4,5,6,7]
+y = [2,3,5,7,11,13,17]
+
+fig, ax = plt.subplots()
+
+def update(frame):
+    ax.clear()
+    ax.plot(x[:frame], y[:frame], marker='o')
+    ax.set_title("Line Drawing Animation")
+
+ani = FuncAnimation(fig, update, frames=len(x)+1, interval=500)
+
+plt.show()
+#+end_src
+
+
+Growing Bar Chart Animation
+#+begin_src python
+import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
+
+values = [3, 5, 7, 4, 6]
+
+fig, ax = plt.subplots()
+
+def update(frame):
+    ax.clear()
+    ax.bar(['A','B','C','D','E'], [v + frame for v in values], color='green')
+    ax.set_title("Growing Bar Chart")
+
+ani = FuncAnimation(fig, update, frames=5, interval=500)
+
+plt.show()
+#+end_src
+
+
+Moving Sine Wave Animation
+#+begin_src python
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.animation import FuncAnimation
+
+fig, ax = plt.subplots()
+
+x = np.linspace(0, 2*np.pi, 100)
+line, = ax.plot(x, np.sin(x))
+
+def update(frame):
+    line.set_ydata(np.sin(x + frame/10))
+    return line,
+
+ani = FuncAnimation(fig, update, frames=50, interval=100)
+
+plt.title("Moving Sine Wave Animation")
+plt.show()
+#+end_src
+
+
+
+
+Random Scatter Animation
+#+begin_src python
+import matplotlib.pyplot as plt
+import random
+from matplotlib.animation import FuncAnimation
+
+fig, ax = plt.subplots()
+
+def update(frame):
+    ax.clear()
+    x = [random.randint(1,10) for _ in range(10)]
+    y = [random.randint(1,10) for _ in range(10)]
+    ax.scatter(x, y, color='red')
+    ax.set_xlim(0,10)
+    ax.set_ylim(0,10)
+    ax.set_title("Random Scatter Animation")
+
+ani = FuncAnimation(fig, update, frames=20, interval=500)
+
+plt.show()
+#+end_src
+

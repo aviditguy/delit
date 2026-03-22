@@ -1,4 +1,5 @@
 (require 'package)
+(require 'package)
 (setq package-archives '(("melpa" . "https://melpa.org/packages/")
                          ("gnu" . "https://elpa.gnu.org/packages/")))
 (package-initialize)
@@ -126,7 +127,8 @@
 (defvar my/config
   '(:term-name "*my-terminal*"
 	       :term-below t
-	       :python-cmd "python %f"))
+	       :python-cmd "python %f"
+	       :c-cmd "gcc %f -o /tmp/a.out -lm && /tmp/a.out"))
 
 
 ;; ────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -141,13 +143,22 @@
   "Checks if point is on terminal. t or nil"
   (eq (selected-window) (my/terminal-visible-p)))
 
+;; (defun my/create-terminal ()
+;;   "Creates a terminal buffer ansi-term"
+;;   (unless (get-buffer (plist-get my/config :term-name))
+;;     (save-window-excursion
+;;       (let ((buf (ansi-term (getenv "SHELL"))))
+;; 	(with-current-buffer buf
+;; 	  (rename-buffer (plist-get my/config :term-name)))))))
+
 (defun my/create-terminal ()
   "Creates a terminal buffer ansi-term"
   (unless (get-buffer (plist-get my/config :term-name))
     (save-window-excursion
-      (let ((buf (ansi-term (getenv "SHELL"))))
+      (let ((buf (vterm)))
 	(with-current-buffer buf
 	  (rename-buffer (plist-get my/config :term-name)))))))
+
 
 (defun my/show-terminal (&optional switch)
   "Show terminal in split window below or right
@@ -186,14 +197,21 @@ If terminal buffer not created then first create it"
     (my/hide-terminal))
   (my/show-terminal t))
 
+;; (defun my/term-send-command (command)
+;;   "Send COMMAND to ansi-term BUFFER-NAME."
+;;   (my/show-terminal)
+;;   (with-current-buffer (get-buffer (plist-get my/config :term-name))
+;;     (goto-char (point-max))
+;;     (term-send-raw-string (concat command "\n"))))
+
 (defun my/term-send-command (command)
-  "Send COMMAND to ansi-term BUFFER-NAME."
+  "Send COMMAND to vterm BUFFER-NAME."
+  (interactive "sCommand: ")
   (my/show-terminal)
   (with-current-buffer (get-buffer (plist-get my/config :term-name))
     (goto-char (point-max))
-    (term-send-raw-string (concat command "\n"))))
-
-
+    (vterm-send-string command)
+    (vterm-send-return)))
 
 
 ;; ────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -215,27 +233,45 @@ If terminal buffer not created then first create it"
 
 (setq python-indent-guess-indent-offset nil)
 
-(defun my/get-last-expression-python ()
-  (let ((end (point)))
-    (save-excursion
-      (if (org-in-src-block-p)
-	  (org-babel-do-in-edit-buffer
-	   (python-nav-beginning-of-statement))
-	(python-nav-beginning-of-statement))
-      (my/indicate (point) end)
-      (string-trim
-       (buffer-substring-no-properties (point) end)))))
-  
+(defun my/eval-last-expression-python ()
+  (interactive)
+  (save-excursion
+    (let ((end (point))
+	  (block nil))
+      (while (and (not (bobp))
+		  (or (looking-at-p "^[ \t]*$")
+		      (/= (line-beginning-position)
+			  (save-excursion
+			    (back-to-indentation)
+			    (point)))))
+	(forward-line -1)
+	(setf block t))
+
+      (if (eq (point) end)
+	  (kill-ring-save (line-beginning-position) end)
+	(kill-ring-save (point) end))
+
+      (my/show-terminal)
+      (with-current-buffer (get-buffer (plist-get my/config :term-name))
+	(goto-char (point-max))
+	(vterm-yank)
+	(vterm-send-return)
+	(when block (vterm-send-return))))))
+
 
 (defun my/eval-last-expression ()
   (interactive)
-  (cond
-   ((my/lang-context-p 'python-mode "python")
-    (my/term-send-command (my/get-last-expression-python)))
+  (if (use-region-p)
+      (my/term-send-command
+       (buffer-substring-no-properties
+	(region-beginning) (region-end)))
+    
+    (cond
+     ((my/lang-context-p 'python-mode "python")
+      (my/eval-last-expression-python))
 
-   (t
-    (message "context not supported"))))
-
+     (t
+      (message "context not supported")))))
 
 
 
@@ -263,6 +299,7 @@ If terminal buffer not created then first create it"
 (defun my/get-lang-extension (lang)
   (cond
    ((string= lang "python") ".py")
+   ((string= lang "c")       ".c")
    (t                       nil)))
 
 
@@ -286,7 +323,8 @@ If terminal buffer not created then first create it"
        :lang  (org-element-property :language el)
        :body  (org-element-property :value el)
        :path  (alist-get :path header)
-       :libs  (alist-get :libs header)))))
+       :libs  (alist-get :libs header)
+       :wrapc (alist-get :wrapc header)))))
 
 
 (defun my/run-org-src-block ()
@@ -296,8 +334,12 @@ If terminal buffer not created then first create it"
     (let ((lang    (plist-get data :lang))
 	  (path    (plist-get data :path))
 	  (content (plist-get data :body))
-	  (libs    (plist-get data :libs)))
+	  (libs    (plist-get data :libs))
+	  (wrapc   (plist-get data :wrapc)))
 
+      (when wrapc (setf content (wrap-c-code content)))
+      (message "%s" wrapc)
+      
       (let* ((file (my/create-file path lang content))
 	     (cmd  (my/build-lang-command file lang libs)))
 
@@ -305,6 +347,16 @@ If terminal buffer not created then first create it"
 	  (error "No command for language %s" lang))
 
 	(my/term-send-command cmd)))))
+
+
+(defun wrap-c-code (data)
+  (concat
+   "#include <stdio.h>
+#include <stdlib.h>
+int main(void){"
+   data
+   "return 0;
+}"))
 
 
 ;; ────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -319,3 +371,9 @@ If terminal buffer not created then first create it"
 (with-eval-after-load 'org
   (define-key org-mode-map (kbd "C-<return>")
 	      #'my/run-org-src-block))
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(package-selected-packages '(doom-themes org-modern vterm)))

@@ -1,5 +1,4 @@
 (require 'package)
-(require 'package)
 (setq package-archives '(("melpa" . "https://melpa.org/packages/")
                          ("gnu" . "https://elpa.gnu.org/packages/")))
 (package-initialize)
@@ -9,9 +8,6 @@
 (require 'use-package)
 (setq use-package-always-ensure t)  ;; auto-install packages
 
-;; Doom themes
-(use-package doom-themes)
-(load-theme 'doom-material-dark t)
 
 
 
@@ -44,11 +40,12 @@
 (add-hook 'emacs-startup-hook (lambda () (setq gc-cons-threshold (* 2 1000 1000))))
 
 ;; Set Font
-(set-face-attribute 'default nil :font "Iosevka ExtraLight Extended" :height 115)
+(set-face-attribute 'default nil :font "Iosevka Light Extended" :height 110)
 
 
-
-
+;; ────────────────────────────────────────────────────────────────────────────────────────────────────
+;; ORG-MODE SETUP
+;; ────────────────────────────────────────────────────────────────────────────────────────────────────
 (setq org-hide-emphasis-markers t)
 (setq org-startup-folded 'overview)
 (setq org-confirm-babel-evaluate nil)
@@ -80,26 +77,9 @@
   (org-modern-todo t)
   (org-modern-tag t))
 
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(org-level-1 ((t (:inherit default :weight normal :height 1.5))))
- '(org-level-2 ((t (:inherit default :height 1.4))))
- '(org-level-3 ((t (:inherit default :height 1.3))))
- '(org-level-4 ((t (:inherit default :height 1.2))))
- '(org-level-5 ((t (:inherit default :height 1.1))))
- '(org-level-6 ((t (:inherit default :height 1.1))))
- '(org-level-7 ((t (:inherit default :height 1.1))))
- '(org-level-8 ((t (:inherit default :height 1.1)))))
-
 (require 'org-tempo)
 (setq org-structure-template-alist
       '(("c"      . "src c")
-	("py"     . "src python")
-        ("sh"     . "src shell")
-        ("js"     . "src js")
         ("el"     . "src emacs-lisp")
 	("lisp"   . "src lisp")))
 
@@ -113,110 +93,23 @@
   (add-to-list 'org-file-apps '("\\.mp4\\'" . "mpv %s")))
 
 
-
-
-
-
-
+;; ────────────────────────────────────────────────────────────────────────────────────────────────────
+;; THEME SETUP
+;; ────────────────────────────────────────────────────────────────────────────────────────────────────
+(use-package doom-themes
+  :config
+  (load-theme 'doom-1337 t))
 
 
 ;; ────────────────────────────────────────────────────────────────────────────────────────────────────
-;; CONFIG STATE & HELPERS
+;; SLY SETUP
 ;; ────────────────────────────────────────────────────────────────────────────────────────────────────
+(use-package sly
+  :init
+  (setq inferior-lisp-program "sbcl")
+  :config
+  (sly-setup '(sly-fancy)))
 
-(defvar my/config
-  '(:term-name "*my-terminal*"
-	       :term-below t
-	       :python-cmd "python %f"
-	       :c-cmd "gcc %f -o /tmp/a.out -lm && /tmp/a.out"))
-
-
-;; ────────────────────────────────────────────────────────────────────────────────────────────────────
-;; TERMINAL TOGGLE SYSTEM
-;; ────────────────────────────────────────────────────────────────────────────────────────────────────
-
-(defun my/terminal-visible-p ()
-  "Checks if terminal buffer is visible in window. window or nil"
-  (get-buffer-window (plist-get my/config :term-name)))
-
-(defun my/terminal-focused-p ()
-  "Checks if point is on terminal. t or nil"
-  (eq (selected-window) (my/terminal-visible-p)))
-
-;; (defun my/create-terminal ()
-;;   "Creates a terminal buffer ansi-term"
-;;   (unless (get-buffer (plist-get my/config :term-name))
-;;     (save-window-excursion
-;;       (let ((buf (ansi-term (getenv "SHELL"))))
-;; 	(with-current-buffer buf
-;; 	  (rename-buffer (plist-get my/config :term-name)))))))
-
-(defun my/create-terminal ()
-  "Creates a terminal buffer ansi-term"
-  (unless (get-buffer (plist-get my/config :term-name))
-    (save-window-excursion
-      (let ((buf (vterm)))
-	(with-current-buffer buf
-	  (rename-buffer (plist-get my/config :term-name)))))))
-
-
-(defun my/show-terminal (&optional switch)
-  "Show terminal in split window below or right
-If terminal buffer not created then first create it"
-  (my/create-terminal)
-
-  (let ((win (my/terminal-visible-p)))
-    (unless win
-      (setf win (if (plist-get my/config :term-below)
-		    (split-window nil -15 'below)
-		  (split-window nil -100 'right)))
-      (set-window-buffer win (get-buffer (plist-get my/config :term-name))))
-    (when switch (select-window win))))
-
-(defun my/hide-terminal ()
-  "Hides terminal if terminal is focused"
-  (if (my/terminal-focused-p)
-      (delete-window (get-buffer-window (plist-get my/config :term-name)))))
-
-(defun my/toggle-terminal ()
-  "Toggles terminal"
-  (interactive)
-  (if (my/terminal-focused-p)
-      (my/hide-terminal)
-    (my/show-terminal t)))
-
-(defun my/move-terminal ()
-  "Moves terminal between below <-> right"
-  (interactive)
-
-  (setf my/config
-	(plist-put my/config :term-below
-		   (not (plist-get my/config :term-below))))
-
-  (when (my/terminal-visible-p)
-    (my/hide-terminal))
-  (my/show-terminal t))
-
-;; (defun my/term-send-command (command)
-;;   "Send COMMAND to ansi-term BUFFER-NAME."
-;;   (my/show-terminal)
-;;   (with-current-buffer (get-buffer (plist-get my/config :term-name))
-;;     (goto-char (point-max))
-;;     (term-send-raw-string (concat command "\n"))))
-
-(defun my/term-send-command (command)
-  "Send COMMAND to vterm BUFFER-NAME."
-  (interactive "sCommand: ")
-  (my/show-terminal)
-  (with-current-buffer (get-buffer (plist-get my/config :term-name))
-    (goto-char (point-max))
-    (vterm-send-string command)
-    (vterm-send-return)))
-
-
-;; ────────────────────────────────────────────────────────────────────────────────────────────────────
-;; EVAL LAST EXPRESSION
-;; ────────────────────────────────────────────────────────────────────────────────────────────────────
 
 (defun my/indicate (beg end)
   (pulse-momentary-highlight-region beg end))
@@ -230,150 +123,37 @@ If terminal buffer not created then first create it"
 	 (org-element-property :language (org-element-context))
 	 language))))
 
+(defun my/get-last-expression-lisp ()
+  (with-syntax-table emacs-lisp-mode-syntax-table
+    (thing-at-point 'sexp t)))
 
-(setq python-indent-guess-indent-offset nil)
-
-(defun my/eval-last-expression-python ()
-  (interactive)
-  (save-excursion
-    (let ((end (point))
-	  (block nil))
-      (while (and (not (bobp))
-		  (or (looking-at-p "^[ \t]*$")
-		      (/= (line-beginning-position)
-			  (save-excursion
-			    (back-to-indentation)
-			    (point)))))
-	(forward-line -1)
-	(setf block t))
-
-      (if (eq (point) end)
-	  (kill-ring-save (line-beginning-position) end)
-	(kill-ring-save (point) end))
-
-      (my/show-terminal)
-      (with-current-buffer (get-buffer (plist-get my/config :term-name))
-	(goto-char (point-max))
-	(vterm-yank)
-	(vterm-send-return)
-	(when block (vterm-send-return))))))
-
+(defun my/eval-last-expression-lisp ()
+  (let ((expr (my/get-last-expression-lisp)))
+    (if (string-prefix-p "(defun " expr)
+	(sly-eval-last-expression)
+      (if-let ((buf (get-buffer "*sly-mrepl for sbcl*")))
+	  (with-current-buffer buf
+	    (goto-char (point-max))
+	    (insert expr)
+	    (sly-mrepl-return))
+	(message "SLY REPL not running")))))
 
 (defun my/eval-last-expression ()
   (interactive)
-  (if (use-region-p)
-      (my/term-send-command
-       (buffer-substring-no-properties
-	(region-beginning) (region-end)))
-    
-    (cond
-     ((my/lang-context-p 'python-mode "python")
-      (my/eval-last-expression-python))
-
-     (t
-      (message "context not supported")))))
-
-
-
-;; ────────────────────────────────────────────────────────────────────────────────────────────────────
-;; RUN ORG CODE BLOCKS
-;; ────────────────────────────────────────────────────────────────────────────────────────────────────
-
-
-(defun my/org-src-block-p ()
-  (when (derived-mode-p 'org-mode)
-    (let ((el (org-element-context)))
-      (when (eq (org-element-type el) 'src-block)
-	el))))
-
-
-(defun my/create-file (path lang content)
-  (let* ((ext (my/get-lang-extension lang))
-	 (file (if path path (make-temp-file "my-" nil ext))))
-    (when (and path (file-name-directory path))
-      (make-directory (file-name-directory path) t))
-    (with-temp-file file (insert content))
-    file))
-
-
-(defun my/get-lang-extension (lang)
   (cond
-   ((string= lang "python") ".py")
-   ((string= lang "c")       ".c")
-   (t                       nil)))
+   ((my/lang-context-p 'lisp-mode "lisp")
+    (my/eval-last-expression-lisp))
 
+   (t
+    (message "context not supported"))))
 
-(defun my/build-lang-command (file lang libs)
-  (let ((cmd (plist-get my/config
-			(intern (format ":%s-cmd" lang)))))
-    (when cmd
-      (let ((cmd1 (replace-regexp-in-string "%f" file cmd t t)))
-	(if libs
-	    (replace-regexp-in-string "&&" (concat libs " &&") cmd1 t t)
-	  cmd1)))))
-
-
-(defun my/extract-org-src-block ()
-  (when-let ((el (my/org-src-block-p)))
-
-    (let ((header (org-babel-parse-header-arguments
-		   (org-element-property :parameters el))))
-
-      (list
-       :lang  (org-element-property :language el)
-       :body  (org-element-property :value el)
-       :path  (alist-get :path header)
-       :libs  (alist-get :libs header)
-       :wrapc (alist-get :wrapc header)))))
-
-
-(defun my/run-org-src-block ()
-  (interactive)
-  (let ((data (my/extract-org-src-block)))
-
-    (let ((lang    (plist-get data :lang))
-	  (path    (plist-get data :path))
-	  (content (plist-get data :body))
-	  (libs    (plist-get data :libs))
-	  (wrapc   (plist-get data :wrapc)))
-
-      (when wrapc (setf content (wrap-c-code content)))
-      (message "%s" wrapc)
-      
-      (let* ((file (my/create-file path lang content))
-	     (cmd  (my/build-lang-command file lang libs)))
-
-	(unless cmd
-	  (error "No command for language %s" lang))
-
-	(my/term-send-command cmd)))))
-
-
-(defun wrap-c-code (data)
-  (concat
-   "#include <stdio.h>
-#include <stdlib.h>
-int main(void){"
-   data
-   "return 0;
-}"))
-
-
-;; ────────────────────────────────────────────────────────────────────────────────────────────────────
-;; KEYBINDINGS
-;; ────────────────────────────────────────────────────────────────────────────────────────────────────
-
-(global-set-key (kbd "C-`") #'my/toggle-terminal)
-(global-set-key (kbd "C-M-`") #'my/move-terminal)
 
 (global-set-key (kbd "C-M-e") #'my/eval-last-expression)
-
-(with-eval-after-load 'org
-  (define-key org-mode-map (kbd "C-<return>")
-	      #'my/run-org-src-block))
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(package-selected-packages '(doom-themes org-modern vterm)))
+ '(custom-safe-themes
+   '("fffef514346b2a43900e1c7ea2bc7d84cbdd4aa66c1b51946aade4b8d343b55a"
+     default)))

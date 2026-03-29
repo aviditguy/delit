@@ -1,0 +1,250 @@
+
+
+* list
+
+#+begin_src lisp
+  '(1 2 3)
+  (list 1 2 3)
+#+end_src
+
+#+begin_src lisp
+  (cons 1 (cons 2 (cons 3 nil)))
+  (cons 1 '(2 3))
+#+end_src
+
+#+begin_src lisp
+  (car '(1 2 3 4 5))
+  (cdr '(1 2 3 4 5))
+  (nth 2 '(1 2 3 4 5))
+#+end_src
+
+#+begin_src lisp
+  (car '(1 2 3 4 5))
+  (cadr '(1 2 3 4 5))
+  (caddr '(1 2 3 4 5))
+  (cadddr '(1 2 3 4 5))
+#+end_src
+
+#+begin_src lisp
+  (cdr '(1 2 3 4 5))
+  (cddr '(1 2 3 4 5))
+  (cdddr '(1 2 3 4 5))
+  (cddddr '(1 2 3 4 5))
+#+end_src
+
+#+begin_src lisp
+  (defun print-list (lst)
+    (when lst
+      (print (car lst))
+      (print-list (cdr lst))))
+
+  (print-list '(1 2 3 4 5))
+
+  ;; Using dolist
+  (dolist (x '(1 2 3 4 5))
+    (print x))
+#+end_src
+
+#+begin_src lisp
+  (length '(1 2 3 4 5))
+  (append '(1 2) '(3 4))
+  (reverse '(1 2 3 4 5))
+#+end_src
+
+
+** Append list manually
+#+begin_src lisp
+  (defun my-append (a b)
+    (if (null a)
+        b
+        (cons (car a)
+  	    (my-append (cdr a) b))))
+
+  (my-append '(1 2) '(3 4))
+#+end_src
+- first list copy hoti hai
+- second list append hoti hai
+- Time Complexity: O(n)
+
+
+Step-by-Step Visualization
+#+begin_src lisp
+  (cons 1 (my-append '(2) '(3 4))) <-----------------------------------|                             
+  (cons 2 (my-append '() '(3 4))) ___                                  |
+                                    |--> (cons 2 '(3 4)) => '(2 3 4) --|
+
+  (cons 1 '(2 3 4)) ==> '(1 2 3 4)
+#+end_src
+
+
+** Reverse list manually
+
+*** Simple Recursive Approach
+#+begin_src lisp
+  (defun my-reverse (lst)
+    (if (null lst)
+        nil
+        (append (my-reverse (cdr lst))
+  	      (list (car lst)))))
+
+  (my-reverse '(1 2 3))
+#+end_src
+Steps:
+- (1 2 3)
+- → reverse (2 3) + (1)
+- → reverse (3) + (2) + (1)
+- → (3) + (2) + (1)
+- → (3 2 1)
+
+*Drawback*:
+- *append* har step pe expensive hai → *O(n²)*
+
+
+*** Tail Recursive (Efficient Way)
+#+begin_src lisp
+  (defun my-reverse-tail (lst &optional (acc nil))
+    (if (null lst)
+        acc
+        (my-reverse-tail (cdr lst)
+  		       (cons (car lst) acc))))
+
+  (my-reverse-tail '(1 2 3))
+#+end_src
+
+| *Step* | *lst*     | *acc*     |
+|------+---------+---------|
+| *1*    | (1 2 3) | NIL     |
+| *2*    | (2 3)   | (1)     |
+| *3*    | (3)     | (2 1)   |
+| *4*    | NIL     | (3 2 1) |
+
+Time Complexity: O(n)
+
+
+*** Iterative (Loop Based)
+#+begin_src lisp
+  (defun my-reverse-loop (lst)
+    (let ((result nil))
+      (dolist (x lst result)
+        (setf result (cons x result)))))
+
+  (my-reverse-loop '(1 2 3))
+#+end_src
+
+
+*** Destructive Reverse (Advanced)
+#+begin_src lisp
+  (defun my-nreverse (lst)
+    (let ((prev nil)
+  	(curr lst))
+      (loop while curr do
+        (let ((next (cdr curr)))
+  	(setf (cdr curr) prev)
+  	(setf prev curr)
+  	(setf curr next)))
+      prev))
+
+  (my-nreverse '(1 2 3))
+#+end_src
+- Original list modify karta hai
+- Fastest hai (no extra memory)
+
+
+
+** Min-Max
+
+*** Iterative Approach
+#+begin_src lisp
+(defun min-max (lst)
+  (if (null lst)
+      nil
+      (let ((min (car lst))
+	    (max (car lst)))
+	(dolist (x (cdr lst) (list min max))
+	  (when (< x min)
+	    (setf min x))
+	  (when (> x max)
+	    (setf max x))))))
+
+(min-max '(5 2 8 1 9 3))
+#+end_src
+
+*** Recursive Approach
+#+begin_src lisp
+(defun min-max-rec (lst min max)
+  (if (null lst)
+      (list min max)
+      (let ((x (car lst)))
+	(min-max-rec
+	 (cdr lst)
+	 (if (< x min) x min)
+	 (if (> x max) x max)))))
+
+(let ((lst '(5 2 8 1 9 3)))
+  (min-max-rec (cdr lst) (car lst) (car lst)))
+#+end_src
+
+
+
+* Functions
+
+
+#+begin_src lisp
+  (defun function-name (zero or some arguments)
+    "docstring"
+    (body of function))
+#+end_src
+
+
+#+begin_src lisp
+  (defun hello-world ()
+    (print "Hello World"))
+
+  (hello-world)
+#+end_src
+
+
+#+begin_src lisp
+  (defun greet (name)
+    (format t "Hello ~a~%" name))
+
+  (greet "Rahul")
+#+end_src
+
+** Optional Arguments: ~&optional~
+
+#+begin_src lisp
+  (defun greet (name &optional (age 18))
+    (format t "~a is ~a years old" name age))
+
+  (greet "Rahul")
+  (greet "Rahul" 30)
+#+end_src
+
+** Keyword Arguments: ~&key~
+
+#+begin_src lisp
+  (defun person-info (&key name (age 20))
+    (format t "~a - ~a" name age))
+
+  (person-info :name "Rahul")
+  (person-info :age 21 :name "Rahul")
+#+end_src
+
+** Rest Arguments: ~&rest~
+
+#+begin_src lisp
+  (defun sum (&rest numbers)
+    (apply #'+ numbers))
+
+  (sum)
+  (sum 1)
+  (sum 1 2 3)
+  (sum 1 2 3 4 5 6)
+#+end_src
+
+** Anonymous Functions: ~lambda~
+
+#+begin_src lisp
+
+#+end_src

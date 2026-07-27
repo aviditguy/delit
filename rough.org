@@ -1,460 +1,458 @@
 
+* libc String Functions Clone
+
+1. *Length*
+   * ~strlen~ and ~strnlen~
+
+2. *Copy*
+   * ~strcpy~ and ~strncpy~
+
+3. *Concatenate*
+   * ~strcat~ and ~strncat~
+
+4. *Compare*
+   * ~strcmp~ and ~strncmp~
+   * ~strcasecmp~ and ~strncasecmp~
+
+5. *Search*
+   * ~strchr~ and ~strrchr~
+   * ~strstr, strpbrk, strspn, strcspn~
+
+6. *Token*
+   * ~strtok~ and ~strtok_r~
+
+7. *Duplicate*
+   * ~strdup~ and ~strndup~
+
+8. *Memory Functions*
+   * ~memcpy, memmove, memset, memcmp, memchr, memmem~
 
 
+* Eval Last Expression for Bash
 
-python matplotlib library
+Ye 2 jagah me chalna chahiye
+- bash script file me ~.sh~
+- org mode me bash code block me ~src sh~
 
-Simple Line Plot
-#+begin_src python
-import matplotlib.pyplot as plt
-
-x = [1,2,3,4]
-y = [10,20,25,30]
-
-plt.title("First Graph")
-plt.xlabel("X Axis")
-plt.ylabel("Y Axis")
-
-plt.plot(x,y)
-plt.show()
+#+begin_src emacs-lisp
+(defun my-lang-context-p (mode lang)
+  (or
+   (derived-mode-p mode)
+   (and (derived-mode-p 'org-mode)
+	(org-in-src-block-p)
+	(string=
+	 (org-element-property :language (org-element-context))
+	 lang))))
 #+end_src
 
-Plot Multiple Lines
-#+begin_src python
-import matplotlib.pyplot as plt
+Now hum kis context me hai ye check kar sakte hai like
 
-x = [1,2,3,4]
-y1 = [10,20,25,30]
-y2 = [5,15,22,28]
-
-plt.plot(x, y1)
-plt.plot(x, y2, color="red", linestyle="--", marker="o")
-plt.show()
+#+begin_src emacs-lisp
+(my-lang-context-p "fundamental-mode" "emacs-lisp")
 #+end_src
 
-Legend add karna
-#+begin_src python
-import matplotlib.pyplot as plt
+Step 1: Simple single line expression
 
-x = [1,2,3,4,5]
-y1 = [5,7,8,7,9]
-y2 = [10,20,30,40,50]
-
-plt.plot(x,y1,label="Line 1")
-plt.plot(x,y2,label="Line 2")
-
-plt.legend()
-plt.show()
+#+begin_src shell
+ls
+pwd
+echo hello world
 #+end_src
 
-Bar Chart
-Categories compare karne ke liye
-#+begin_src python
-import matplotlib.pyplot as plt
+Ek simple highlight function likhte hai ki hum kya terminal me bhej rahe hai
 
-categories = ["A","B","C"]
-values = [10,20,15]
-
-plt.bar(categories,values)
-plt.show()
+#+begin_src emacs-lisp
+(defun my-highlight (beg end)
+  (pulse-momentary-highlight-region beg end))
 #+end_src
 
-Horizontal Bar Chart
-#+begin_src python
-import matplotlib.pyplot as plt
+Now hamara function current idea cursor position se start of line tak bhejna
 
-categories = ["A","B","C"]
-values = [5,7,3]
+#+begin_src emacs-lisp
+(defun my-eval-last-exp-shell ()
+  (interactive)
+  (let ((end (point))
+	(beg (line-beginning-position)))
 
-plt.barh(categories,values)
-plt.title("Horizontal Bar")
-plt.show()
+    (my-highlight beg end)
+    
+    (my-vterm-send
+     (string-trim
+      (buffer-substring-no-properties end beg)))))
 #+end_src
 
-Histogram
-Data frequency distribution dikhane ke liye
-#+begin_src python
-import matplotlib.pyplot as plt
-
-data = [1,2,2,3,3,3,4,4,5]
-plt.hist(data,bins=5)
-plt.show()
+#+begin_src emacs-lisp
+(global-set-key (kbd "C-M-e") #'my-eval-last-exp-shell)
 #+end_src
 
-Scatter Plot
-Data Distribution aur correlation dekhne ke liye
-#+begin_src python
-import matplotlib.pyplot as plt
+Step 2: Handling Quotes that span Multiple Lines
 
-x = [1,2,3,4,5]
-y = [5,7,8,7,9]
+#+begin_src shell
+echo "hello
+world"
 
-plt.scatter(x,y)
-plt.show()
+echo 'hello
+world'
 #+end_src
 
+#+begin_src emacs-lisp
+(defun my-quotes-balanced-p (expr)
+  (let ((single 0)
+	(double 0))
 
-Pie Chart
-Percentage distributions dekhne ke liye
-#+begin_src python
-import matplotlib.pyplot as plt
+    (dotimes (i (length expr))
+      (cond
+       ((eq (aref expr i) ?')  (setf single (1+ single)))
+       ((eq (aref expr i) ?\") (setf double (1+ double)))))
 
-sizes = [30,40,20,10]
-labels = ["A","B","C","D"]
-
-plt.pie(sizes,labels=labels,autopct="%1.1f%%")
-plt.title("Pie Chart")
-plt.show()
+    (and (= (% single 2) 0)
+	 (= (% double 2) 0))))
 #+end_src
 
-Box Plot
-Outliers aur data spread dekhne ke liye
-#+begin_src python
-import matplotlib.pyplot as plt
+#+begin_src emacs-lisp
+(defun my-eval-last-exp-shell ()
+  (interactive)
+  (let ((end  (point))
+	(expr nil)
+	(done nil))
 
-data = [10,20,30,40,50,60,70]
+    (save-excursion
+      (while (and (not done)
+		  (re-search-backward "\n" nil t))
+	(setf expr (string-trim
+		    (buffer-substring-no-properties
+		     (1+ (point)) end)))
 
-plt.boxplot(data)
-plt.title("Box Plot")
-plt.show()
-#+end_src
+	(when (my-quotes-balanced-p expr)
+	  (my-highlight (1+ (point)) end)
+	  (setf done t))))
 
-Area Plot
-#+begin_src python
-import matplotlib.pyplot as plt
-
-x = [1,2,3,4,5]
-y = [10,20,15,25,30]
-
-plt.fill_between(x,y)
-plt.title("Area Plot")
-plt.show()
-#+end_src
-
-Stem Plot
-#+begin_src python
-import matplotlib.pyplot as plt
-
-x = [1,2,3,4]
-y = [10,20,15,25]
-
-plt.stem(x,y)
-plt.title("Stem Plot")
-plt.show()
-#+end_src
-
-Step Plot
-#+begin_src python
-import matplotlib.pyplot as plt
-
-x = [1,2,3,4]
-y = [10,20,15,25]
-
-plt.step(x,y)
-plt.title("Step Plot")
-plt.show()
+    expr))
 #+end_src
 
 
+* Terminal Toggle System in Emacs
 
-#+begin_src python
-import matplotlib.pyplot as plt
+Hum *vterm* terminal use karenge.
+To install
 
-# Sales data
-months = ["Jan","Feb","Mar","Apr","May"]
-sales = [200,250,300,280,350]
-
-products = ["Laptop","Phone","Tablet","Accessories"]
-product_sales = [500,700,300,200]
-
-regions = ["North","South","East","West"]
-region_sales = [400,300,200,350]
-
-profits = [50,80,60,70,90]
-
-# Create dashboard layout
-plt.figure(figsize=(10,8))
-
-# 1 Line chart (Monthly sales)
-plt.subplot(2,2,1)
-plt.plot(months,sales,marker="o")
-plt.title("Monthly Sales")
-
-# 2 Bar chart (Product sales)
-plt.subplot(2,2,2)
-plt.bar(products,product_sales)
-plt.title("Sales by Product")
-
-# 3 Pie chart (Region distribution)
-plt.subplot(2,2,3)
-plt.pie(region_sales,labels=regions,autopct="%1.1f%%")
-plt.title("Sales by Region")
-
-# 4 Profit line
-plt.subplot(2,2,4)
-plt.plot(months,profits,color="green",marker="o")
-plt.title("Monthly Profit")
-
-plt.tight_layout()
-plt.show()
+#+begin_src emacs-lisp
+(use-package vterm)
 #+end_src
 
+Now ab vterm kholne ke liye
 
-
-
-
-
-*Context switching* is the process where the kernel saves the state of the current
-*process and loads the state of another process so the CPU can switch between them*.
-The kernel is responsible for context switching.
-
-Context Switching (Simple Steps)
-
-1. *Process running in user mode*
-   - A process is running normally in *user mode* on the CPU.
-2. *Time slice finishes (Interrupt)*
-   - The CPU timer notices that the process has used its allotted time.
-   - The CPU interrupts the process and switches to *kernel mode*.
-3. *Kernel saves the process state*
-   - The kernel *saves the current state* of the process.
-   - This includes CPU registers, program counter, and memory information.
-   - This helps the process *resume later from the same point*.
-4. *Kernel handles pending tasks*
-   - The kernel checks and performs tasks that occurred during the time slice.
-   - Example: *I/O operations* like keyboard input, disk read/write, etc.
-5. *Kernel selects the next process*
-   - The kernel checks the *ready queue (list of ready processes)*.
-   - It chooses the *next process to run* using a scheduling algorithm.
-6. *Prepare memory and CPU for new process*
-   - The kernel *loads the memory context* of the new process.
-   - It also prepares the *CPU registers* for that process.
-7. *Set new time slice*
-   - The kernel tells the CPU *how long this new process can run*.
-8. *Switch back to user mode*
-   - The CPU switches from *kernel mode to user mode*.
-9. *New process starts running*
-   - The selected process now *gets control of the CPU* and begins execution.
-
-Simple Diagram for Context Switching:
-#+begin_src
-        +------------------+
-        |   Process A      |
-        |  (User Mode)     |
-        +------------------+
-                |
-                | Time Slice Over (Timer Interrupt)
-                v
-        +------------------+
-        |      CPU         |
-        | Switch to Kernel |
-        |      Mode        |
-        +------------------+
-                |
-                v
-        +------------------+
-        |      Kernel      |
-        | Save State of A  |
-        | Handle I/O Tasks |
-        | Select Next Proc |
-        +------------------+
-                |
-                v
-        +------------------+
-        |  Load State of B |
-        |  Set Time Slice  |
-        +------------------+
-                |
-                v
-        +------------------+
-        |   Process B      |
-        |   (User Mode)    |
-        +------------------+
+#+begin_src emacs-lisp
+(vterm)
 #+end_src
 
+** Step 1: Show vterm in split-window
 
+Abhi mujhe *vterm* show karna hai split-window me in *below* direction
 
+#+begin_src emacs-lisp
+(defun my-vterm-show ()
+  (save-window-excursion
+    (vterm))
 
+  (let ((win (split-window nil -15 'below)))
+    (set-window-buffer win "*vterm*")))
+#+end_src
 
-Memory Management (During Context Switch)
-The *kernel also manages memory* when switching from one process to another.
-Some important conditions must be followed.
+Abhi agar hum ye multiple times run karenge to multiple split-window me terminal khulega.
 
-Important Conditions
-1. *Kernel Private Memory*
-   - The kernel must have its *own private memory area*.
-   - *User processes cannot access it*.
-2. *Separate Memory for Each Process*
-   - Every process gets *its own section of memory*.
-3. *Process Isolation*
-   - One process *cannot access the private memory of another process*.
-4. *Memory Sharing*
-   - Some memory can be *shared between processes* if needed.
-5. *Read-Only Memory*
-   - Some memory areas are *read-only*, meaning processes *can read but cannot modify* them.
-6. *Using Disk as Extra Memory*
-   + The system can use *disk space as additional memory* when RAM is not enough.
-   + This is called *virtual memory*.
+#+begin_src emacs-lisp
+(my-vterm-show)
+#+end_src
 
+Toh to solve this,
+Hum check karenge ki agar *vterm* pahle se split-window me visible hai ki nahi agar nahi hai tabhi window create karenge.
 
-Virtual Memory and MMU
-Modern CPUs have a component called *Memory Management Unit (MMU)*.
+#+begin_src emacs-lisp
+(let ((win (get-buffer-window "*vterm*")))
+  (unless win
+    (setf win (split-window nil -15 'below))
+    (set-window-buffer win "*vterm*")))
+#+end_src
 
-How It Works
-1. A process *does not access physical memory directly*.
-2. The kernel makes each process *feel like it has its own full memory*.
-3. When the process tries to access memory:
-   - The *MMU intercepts the request*.
-4. The MMU *translates the virtual address* (process view) into a *physical address* (actual RAM location).
-5. The kernel *creates and maintains the memory mapping*.
+Right now hum sirf *below* me split kar rahe hai par mijhe *below* and *right* side dono option chahiye.
+Iske liye ek global state variable banate hai
 
+#+begin_src emacs-lisp
+(defvar *my-vterm-below* t)
+#+end_src
 
+Ab agar *t* to below me split karenge nahi to *right* side me split karenge.
 
-Context Switch and Memory
-During a context switch:
-1. The kernel stops the current process.
-2. It changes the memory map from the old process.
-3. It loads the memory map of the new process.
-4. The new process then accesses its own memory space.
+#+begin_src emacs-lisp
+(setf win (if my-vterm-below
+	      (split-window nil -15 'below)
+	    (split-window nil -80 'right)))
+#+end_src
 
+Terminal khul raha hai par *point* (cursor) switch nahi kar raha hai
+Iske liye function ko argument dedo
 
-Page Table
-- The structure used to store the memory address mapping is called a page table.
+#+begin_src emacs-lisp
+(defun my-vterm-show (&optional switch)
+  ;; ....
+  (when switch (select-window win)))
+#+end_src
 
-#+begin_src
-Process (Virtual Address)
-        |
-        v
-      MMU
-(Address Translation)
-        |
-        v
-Physical Memory (RAM)
+Now ye switch karega
+
+#+begin_src emacs-lisp
+(my-vterm-show t)
+#+end_src
+
+** Step 2: Decide Terminal Position Based on Window Size
+
+Hum frame ki width nikaal sakte hai emacs me using
+
+#+begin_src emacs-lisp
+(frame-width)
+#+end_src
+
+Hum apni ek default width set karte hai *right* side me terminal tabhi khule jab minimum width atleast ho frame ki
+
+#+begin_src emacs-lisp
+(defconst *my-vterm-min-width-for-right* 180)
+#+end_src
+
+Now hum apne ~my-vterm-show~ function me add kar sakte hai
+
+#+begin_src emacs-lisp
+(defun my-vterm-show (&optional switch)
+  ;; ....
+
+  (unless win
+    (when (< (frame-width) *my-vterm-min-width-for-right*)
+      (setf *my-vterm-below* t))
+    
+    ;; ...)))
+#+end_src
+
+Now *right* side me tabhi khulega jab frame ki min width *180* ho.
+
+** Step 3: Hide vterm
+
+Mujhe terminal tabhi hide karna jab terminal window focused ho, iske liye hum ek helper function banayenge.
+Ye function returns either terminal window *win or nil*.
+
+#+begin_src emacs-lisp
+(defun my-vterm-is-focused ()
+  (let ((win (get-buffer-window "*vterm*")))
+    (if (eq win (selected-window))
+	win
+      nil)))
+#+end_src
+
+Ab hum easily terminal hide kar sakte hai.
+
+#+begin_src emacs-lisp
+(defun my-vterm-hide ()
+  (let ((win (my-vterm-is-focused)))
+    (when win (delete-window win))))
+#+end_src
+
+** Step 4: Toggle Terminal Behavior
+
+Ab finally ye main driving function hai jo hum keybinding ke saath use karenge
+
+#+begin_src emacs-lisp
+(defun my-vterm-toggle ()
+  (interactive)
+  (if (my-vterm-is-focused)
+      (my-vterm-hide)
+    (my-vterm-show t)))
+#+end_src
+
+Set it to ~C-`~ keybinding
+
+#+begin_src emacs-lisp
+(global-set-key (kbd "C-`") #'my-vterm-toggle)
+#+end_src
+
+** Step 5: Move Terminal below <=> right
+
+Idea hai ki pehle *hide* karo fir terminal position update karo aur phir *show* karo.
+Par isme ek problem agar terminal *show* hai par focused nahi to kabhi *hide* nahi hoga.
+
+Toh first step *show* karo, isse terminal focused ho jaayega.
+
+#+begin_src emacs-lisp
+(defun my-vterm-move ()
+  (interactive)
+  (my-vterm-show t)
+
+  (setf my-vterm-below
+	(not my-vterm-below))
+
+  (my-vterm-hide)
+  (my-vterm-show t))
+#+end_src
+
+Aur ise ~C-M-`~ keybinding pe set kar dete hai.
+
+#+begin_src emacs-lisp
+(global-set-key (kbd "C-M-`") #'my-vterm-move)
+#+end_src
+
+** Step 6: Send Command to Terminal
+
+#+begin_src emacs-lisp
+(defun my-vterm-send (command)
+  (my-vterm-show)
+  (with-current-buffer "*vterm*"
+    (goto-char (point-max))
+    (vterm-send-string command t)
+    (vterm-send-return)))
+#+end_src
+
+~(vterm-send-string command t)~
+Isme *t* paste ki tarah bhejta hai nahi to char-by-char bhejega
+Isse python me indentation problem aa sakti hai.
+
+Now ab hum commands run kar sakte hai
+
+#+begin_src emacs-lisp
+(my-vterm-send "ls")
+(my-vterm-send "echo hello world")
 #+end_src
 
 
 
 
+* Theme Switcher in Emacs
 
+~custom-enabled-themes~ Emacs ka built-in variable hai jo currently enabled themes ki list rakhta hai.
 
-
-
-
-
-- *Subsequence*: characters skip ho sakte hai
-- *Substring*: characters continuous (contiguous) hone chahiye
-
-Example: *"ABC"*
-Subsequences: *A  B  C  AB  AC  BC  ABC*
-Substrings: *A  AB  ABC  B  BC  C*
-
-
-
-+ String: ABC
-+ Length: n = 3
-
-
-All Subsequences:
-#+begin_src
-A
-B
-C
-AB
-AC
-BC
-ABC
+#+begin_src emacs-lisp
+custom-enabled-themes
 #+end_src
 
-Total Subsequences, Power Set jaisa hai: 2^n = 2^3 = 8
+Toh general idea ye hai ki ye saari purani themes ko disable karo.
 
+Ek time par multiple themes enabled ho sakti hain. Isliye nayi theme load karne se pehle purani themes disable kar dete hain taaki colors mix na hon.
 
-
-
-| *number* | *binary* | *subsequence* |
-|--------+--------+-------------|
-| *0*      | *000*    | *""*          |
-| *1*      | *001*    | *A*           |
-| *2*      | *010*    | *B*           |
-| *3*      | *011*    | *AB*          |
-| *4*      | *100*    | *C*           |
-| *5*      | *101*    | *AC*          |
-| *6*      | *110*    | *BC*          |
-| *7*      | *111*    | *ABC*         |
-
-
-Rule:
-#+begin_src c
-1 → character include
-0 → character skip
+#+begin_src emacs-lisp
+(mapc #'disable-theme custom-enabled-themes)
 #+end_src
 
+Aur uske baad apni theme load karo.
 
-
-#+begin_src c
-#include <stdio.h>
-#include <string.h>
-
-int main() {
-  char str[] = "ABC";
-  int n = strlen(str);
-  int total = 1 << n;   // 2^n
-
-  for (int mask = 0; mask < total; mask++) {
-    for (int i = 0; i < n; i++) {
-      if (mask & (1 << i))
-	printf("%c", str[i]);
-    }
-    printf("\n");
-  }
-}
+#+begin_src emacs-lisp
+(load-theme 'tango-dark t)
 #+end_src
 
+** Step 1: Install Theme Package
 
-Visualization
-String: *"ABC"*
-Binary Mask:
-#+begin_src
-000 → ""
-001 → A
-010 → B
-011 → AB
-100 → C
-101 → AC
-110 → BC
-111 → ABC
+#+begin_src emacs-lisp
+(use-package doom-themes)
 #+end_src
 
-Time Complexity: *O(n 2^n)*
-Outer loop: *O(2^n)*
-Inner loop: *O(n)*
+Hum apni kuch favorite themes se selection karenge.
 
-
-
-* Python *requests* Library
-
-Installation in Arch: ~sudo pacman -S python-requests~
-
-Basic Request
-#+begin_src python
-import requests
-
-url = "https://quotes.toscrape.com/"
-response = requests.get(url)
-
-print(response.status_code)    # HTTP status code (200 = OK)
-print(response.text[:500])     # First 500 chars of HTML
+#+begin_src emacs-lisp
+(defvar *my-themes*
+  '(doom-material-dark
+    doom-1337
+    doom-acario-dark
+    doom-ir-black))
 #+end_src
 
-Extract Data (Quotes)
-#+begin_src python
-import requests
-from bs4 import BeautifulSoup
+Hamara current theme index.
 
-url = "https://quotes.toscrape.com/"
-res = requests.get(url)
+#+begin_src emacs-lisp
+(defvar *my-theme-index* 0)
+#+end_src
 
-soup = BeautifulSoup(res.text, "html.parser")
-quotes = soup.find_all("span", class_="text")
+** Step 2: Load Theme
 
-for q in quotes:
-    print(q.text)
+~my-load-theme~ function *index* lega aur us index ki theme load karega.
+
+#+begin_src emacs-lisp
+(defun my-load-theme (index)
+  (let* ((len   (length *my-themes*))
+	 (idx   (mod index len))
+	 (theme (nth idx *my-themes*)))
+    (mapc #'disable-theme custom-enabled-themes)
+    (load-theme theme t)
+    (setf *my-theme-index* idx)
+    (message "Theme Loaded: %s" theme)))
+#+end_src
+
+Ye hamara main driving function hai jo cycle karega through all our themes.
+
+#+begin_src emacs-lisp
+(defun my-cycle-themes ()
+  (interactive)
+  (my-load-theme (1+ *my-theme-index*)))
+#+end_src
+
+Set it to a keybinding.
+
+#+begin_src emacs-lisp
+(global-set-key (kbd "<f5>") #'my-cycle-themes)
+#+end_src
+
+Mujhe jo emacs ki default white theme hai wo bhi chahiye to ~*my-themes*~ variable me hum ek *default* naam se theme add kar dete hai.
+
+#+begin_src emacs-lisp
+(defvar *my-themes*
+  '(default
+    ....))
+#+end_src
+
+fir *my-load-theme* function me.
+
+#+begin_src emacs-lisp
+(unless (eq theme 'default)
+  (load-theme theme t))
+#+end_src
+
+*load-theme* tabhi call karo agar *default* theme na set ho.
+
+** Step 3: Save Theme on Exit
+
+Is File me hum apni theme state save karenge.
+
+#+begin_src emacs-lisp
+(defvar *my-theme-state-file* "~/.emacs.d/theme-state.el")
+#+end_src
+
+- Jab Emacs exit hota hai, tab ~kill-emacs-hook~ trigger hota hai.
+- ~kill-emacs-hook~ ek hook variable hai jo functions ki list store karta hai.
+- Emacs exit hone par is list ke sabhi functions automatically execute kiye jaate hain.
+- Hum apna function bhi isi hook me add karenge.
+
+#+begin_src emacs-lisp
+(add-hook 'kill-emacs-hook
+	  (lambda ()
+	    (with-temp-file *my-theme-state-file*
+	      (insert (format "(setf *my-theme-index* %d)"
+			      *my-theme-index*)))))
+#+end_src
+
+Is File me humne emacs-lisp ka expression store kar diya hai example like:
+
+#+begin_src emacs-lisp
+(setf *my-theme-index* 2)
+#+end_src
+
+** Step 4: Loading Theme on Startup
+
+Hum check karenge ki agar ~*my-theme-state-file*~ exists karti hai to use load kar do.
+
+#+begin_src emacs-lisp
+(when (file-exists-p *my-theme-state-file*)
+  (load-file *my-theme-state-file*))
+#+end_src
+
+Isko run karke hamara ~*my-theme-index*~ variable update ho jaayega.
+
+Finally,
+
+#+begin_src emacs-lisp
+(my-load-theme *my-theme-index*)
 #+end_src

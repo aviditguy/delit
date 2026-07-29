@@ -4,35 +4,64 @@ from helper import Vector
 
 class BubbleSort(Scene):
     def construct(self):
-        d = [64, 34, 25, 12, 22, 11, 90]
-        n = len(d)
+        data = [64, 25, 22, 11, 12, 55, 30]
+        n = len(data)
         
-        v = Vector(cap=n)
+        vec = Vector(cap=n)
+
+        for i, v in enumerate(data):
+            vec.set(i, v)
+        
+        self.play(Write(vec))
+
+        ilbl = Text("i", font_size=18).next_to(vec[0], UP)
+        jbg = vec.focus(0, color=BLUE, buff=0)
+        j1bg = vec.focus(1, color=YELLOW, buff=0)        
 
         for i in range(n):
-            v.set(i, d[i])
+            self.play(ilbl.animate.next_to(vec[i], UP))
+            
+            for j in range(n-1-i):
+                self.play(
+                    jbg.animate.move_to(vec[j][0].get_center()),
+                    j1bg.animate.move_to(vec[j+1][0].get_center())
+                )
+                if vec.get(j) > vec.get(j+1):
+                    vec.swap(j, j+1, self, highlight=False)
 
-        self.play(Write(v))
+            self.play(Write(vec.focus(n-i-1, buff=0)))
+
+        self.play(FadeOut(jbg),
+                  FadeOut(j1bg))
+                  
         self.wait(2)
 
-        ilbl = Text("i", font_size=18).next_to(v[0], UP)
-        jlbl = Text("j", font_size=18).next_to(v[0], DOWN)
+
+class SelectionSort(Scene):
+    def construct(self):
+        data = [64, 25, 22, 11, 12, 55, 30]
+        n = len(data)
+
+        vec = Vector(cap=n)
+
+        for i, v in enumerate(data):
+            vec.set(i, v)
         
-        for i in range(n):
-            swapped = False
+        self.play(Write(vec))
+
+        ilbl = Text("i", font_size=18).next_to(vec[0], UP)
+        bg = vec.focus(0, color=BLUE, buff=0)
+        
+        for i in range(n-1):
+            self.play(
+                ilbl.animate.next_to(vec[i], UP),
+                Transform(bg, vec.focus(i, color=BLUE, buff=0))
+            )
             
-            self.play(ilbl.animate.next_to(v[i], UP))
-            
-            for j in range(n-i-1):
-                self.play(jlbl.animate.next_to(v[j], DOWN))
-                if v.get(j) > v.get(j+1):
-                    v.swap(j, j+1, self)
-                    swapped = True
+            midx, mbg = vec.get_min(self, start=i)
+            vec.swap(i, midx, self, highlight=False)
+            self.play(FadeOut(mbg), FadeIn(vec.focus(i, buff=0)))
 
-            self.play(FadeIn(v.focus(n-i-1, buff=0)))
-
-            if not swapped:
-                break
-
-        self.play(FadeIn(v.focus(0, buff=0)))        
+        self.play(FadeOut(bg), FadeIn(vec.focus(n-1, buff=0)))
+        
         self.wait(2)

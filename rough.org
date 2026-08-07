@@ -1,31 +1,825 @@
 
-* libc String Functions Clone
 
-1. *Length*
-   * ~strlen~ and ~strnlen~
+* locale in linux & C
 
-2. *Copy*
-   * ~strcpy~ and ~strncpy~
+#+begin_src shell
+locale
+locale -a
 
-3. *Concatenate*
-   * ~strcat~ and ~strncat~
+/etc/locale.gen
+sudo locale-gen
+#+end_src
 
-4. *Compare*
-   * ~strcmp~ and ~strncmp~
-   * ~strcasecmp~ and ~strncasecmp~
+#+begin_src shell
+date
+LC_TIME="en_IN.utf8" date
+LC_TIME="fr_FR.utf8" date
+#+end_src
 
-5. *Search*
-   * ~strchr~ and ~strrchr~
-   * ~strstr, strpbrk, strspn, strcspn~
+Setting locale in C
+#+begin_src C
+#include <stdio.h>
+#include <locale.h>
 
-6. *Token*
-   * ~strtok~ and ~strtok_r~
+printf("%s\n", setlocale(LC_ALL, NULL));          // locale in C
+printf("%s\n", setlocale(LC_ALL, ""));            // system locale use karna
+printf("%s\n", setlocale(LC_ALL, "fr_FR.utf8"));  // specific locale
+#+end_src
 
-7. *Duplicate*
-   * ~strdup~ and ~strndup~
+#+RESULTS:
+| C           |
+| en_US.UTF-8 |
+| fr_FR.utf8  |
 
-8. *Memory Functions*
-   * ~memcpy, memmove, memset, memcmp, memchr, memmem~
+Numeric Formatting
+Isme hum ~struct lconv~ use karenge see ~man lconv~.
+
+#+begin_src C
+#include <stdio.h>
+#include <locale.h>
+
+struct lconv *l = localeconv();
+printf("%s\n", l->decimal_point);
+#+end_src
+
+#+RESULTS:
+: .
+
+* sed command in Linux
+
+~sed (stream editor)~ ke tool hai jisse hum text editing operations kar sakte hai.
+Main use-case: *search + replace, filtering, batch text editing*.
+
+Basic Syntax:
+#+begin_src
+sed [OPTIONS] 'command' file
+#+end_src
+
+Ye file ya standard input (stdin) dono se input le sakta hai.
+#+begin_src shell
+sed 's/nologin/yeslogin/' /etc/passwd
+cat /etc/passwd | sed 's/nologin/yeslogin/'
+#+end_src
+-----
+
+** substitute (s) command
+
+#+begin_src
+s/pattern/replacement/flags
+#+end_src
+
+Data:
+#+begin_src text :create data.txt
+apple banana apple
+apple is apple red
+banana is yellow
+123 apple 456 apple & apple
+apple Apple APPLE
+   apple with spaces
+#+end_src
+
+*Flags:*
+- *g (global)*                Line me *saare matches replace* karega
+- *i (case-insensitive)*      Upper/Lowercase ignore karega
+- *p (print modified lines)*  Sirf wo lines print karega jaha substitution hua.
+
+#+begin_src shell
+sed 's/apple/orange/' data.txt         # replace first occurence of apple with orange
+sed 's/apple/orange/g' data.txt        # replace all occurences of apple with orange
+
+sed '2s/apple/orange/' data.txt        # first apple to orange in 2nd line 
+sed '2,5s/apple/orange/g' data.txt     # all apple to orange in line 2 to 5
+
+sed 's/apple/orange/2' data.txt        # replace 2nd occurence
+sed 's/apple/orange/3' data.txt        # replace 3rd occurence
+#+end_src
+
+*sed* ka default behavior hai har line print karo agar match ho ya nahi.
+with ~p~ hum explicitly print karenge aur ~-n~ option se sed ka default print band karo
+#+begin_src shell
+sed '3,5s/apple/orange/p' data.txt       # modified lines 2 baar print hogi
+sed -n '3,5s/apple/orange/p' data.txt    # -n se sirf modified lines 1 baar print hogi
+#+end_src
+
+-----
+
+** sed commands
+
+- *s*    substitute
+- *d*    delete line
+- *p*    print
+- *i*    insert before line
+- *a*    append after line
+- *c*    change (replace) line
+- *=*    print line number
+- *N*    next lines ko ~\n~ ke saath append karta hai
+
+
+Data:
+#+begin_src text :create data.txt
+apple
+banana
+cat
+dog
+#+end_src
+
+*** *Delete:*
+#+begin_src shell
+sed '3d' data.txt             # delete line 3
+sed '2,4d' data.txt           # delete line 2 to 4
+sed '/apple/d' data.txt       # delete every line containing apple
+#+end_src
+
+*** *Editing:*
+#+begin_src shell
+sed '2i Hello World' data.txt
+sed '2a Hello World' data.txt
+sed '2c Hello World' data.txt
+#+end_src
+
+*** *Printing:*
+#+begin_src shell
+sed -n '/banana/p' data.txt
+sed -n '/banana/!p' data.txt
+#+end_src
+
+*** *Line Numbers:*
+#+begin_src shell
+sed '=' data.txt
+sed '=' data.txt | sed 'N;s/\n/ /'
+
+sed 'N;s/\n/ /' data.txt
+#+end_src
+
+**** _How does ~N~ command works?_
+*N* next line ko current line me join kar deta hai with '\n'.
+
+*Example*
+#+begin_src text :create data.txt
+apple
+banana
+cat
+dog
+#+end_src
+
+Ab agar hum kare.
+#+begin_src shell
+sed 'N' data.txt
+#+end_src
+
+Output same dikhega, BUT internally:
+#+begin_src
+apple\nbanana
+cat\ndog
+#+end_src
+➡ 2-2 lines ka block ban gaya.
+
+Ab hum isme substiture kar sakte hai, multiple commands ko seperate using *;* semicolon.
+#+begin_src shell
+sed 'N;s/\n/ - /' data.txt
+#+end_src
+
+-----
+
+** Ranges in sed
+
+#+begin_src
+start,end COMMAND
+#+end_src
+
+- *2*                    Do operation on Line 2
+- *$*                    This means Last line
+- *2,4*                  Range operation on Line [2-4]
+- *2,$*                  Line 2 to Last line
+- */pattern/p*           Do operation on line containing *pattern*
+- */start/,/end/*        Block opearation on all lines within *start-end* pattern
+- *2,/pattern/*          From Line 2 to line containing *pattern*
+- *range1; range2*       Multiple ranges
+
+#+begin_src shell
+cat data.txt
+sed -n '2p' data.txt                  # print 2nd line
+sed -n '$p' data.txt                  # $ = last line
+sed -n '2,$p' data.txt                # print from 2nd to last line
+
+sed -n '3,4p; 1,2p' data.txt          # multiple ranges
+
+sed -n '/apple/p' data.txt            # print line containing apple
+sed -n '/apple/,/cat/p' data.txt      # print lines from apple to cat pattern
+sed -n '2,/og/p' data.txt             # print from line 2 to line containing pattern
+#+end_src
+
+-----
+
+** Regexes in Sed
+
++ Sed uses *Basic Regular Expressions (BRE)* by default.
++ With *-E or -r → Extended Regular Expressions (ERE)*.
++ Always use *-E* option with regex:
+  - *dot(.), |, ***, *+, ?, ^, $, [abc], [^abc], {}, ()*
+
+#+begin_src text :create data.txt
+apple banana apple
+apple is apple red
+banana is yellow
+123 apple 456 apple & apple
+apple Apple APPLE
+   apple with spaces
+#+end_src
+
+#+begin_src shell
+sed -En '/[0-9]/p' data.txt
+sed -En 's/^ +//p' data.txt
+sed -En '/red|yellow/p' data.txt
+#+end_src
+
+-----
+
+** Advanced
+
+*** Quit Command (*q*)
+Sed normally poori file padhta hai.
+*q* is like return statement.
+
+#+begin_src shell
+sed '2q' ./assets/sed.txt
+sed '/yellow/q' ./assets/sed.txt
+#+end_src
+
+*** Hold & Pattern Space
+
+~sed~ me internally 2 buffers hote hai:
+- *Pattern Space* ⟶ Current line
+- *Hold Space*    ⟶ Extra temporary storage
+
+
+| *Command* | *Meaning*                                   |
+|---------+-------------------------------------------|
+| *h*       | copy pattern to Hold Space                |
+| *g*       | copy pattern from Hold to Pattern Space   |
+| *x*       | Swap content of Pattern & Hold Space      |
+| *H*       | Append pattern to Hold Space with ~\n~      |
+| *G*       | Append pattern from Hold to Pattern Space |
+
+
+#+begin_src
+Pattern Space → current line yahan aati hai
+              → sed isi par commands run karta hai
+              → default output bhi isi se hota hai
+
+Hold Space → temporary storage (extra storage)
+           → jab chaho store/retrieve kar sakte ho
+           → store using 'h'
+           → retrieve using 'g' 
+#+end_src
+
+Data:
+#+begin_src text :create data.txt
+apple
+mango
+banana
+#+end_src
+
+**** Copy (~h~) & Restore (~g~) Pattern
+
+*EXAMPLE 1*
+#+begin_src shell
+sed '1h' data.txt
+#+end_src
+
+- ~1h~ copy karega apple from line 1 ko Hold Space me.
+
+| *Line* | *Pattern* | *Hold*         | *Auto-print* |
+|------+---------+--------------+------------|
+|    1 | apple   | apple        | apple      |
+|    2 | mango   | apple (skip) | mango      |
+|    3 | banana  | apple (skip) | banana     |
+
+-----
+
+*EXAMPLE 2*
+#+begin_src shell
+sed '1h;1d' data.txt
+#+end_src
+
+- ~1h~ line 1 ko copy *apple ⟶ Hold Space*
+- ~1d~ delete line 1
+
+| *Line* | *Pattern* | *Hold*         | *1d*                      | *Auto-print* |
+|------+---------+--------------+-------------------------+------------|
+|    1 | apple   | apple        | delete (jump to line 2) | skip       |
+|    2 | mango   | apple (skip) | skip                    | mango      |
+|    3 | banana  | apple (skip) | skip                    | banana     |
+
+
+*EXAMPLE 3*
+#+begin_src shell
+sed '1h;1d;g' data.txt
+#+end_src
+
+- ~1h~ line 1 ko copy *apple ⟶ Hold Space*
+- ~1d~ delete line 1
+- ~g~  copy pattern from Hold Space to Pattern Space
+
+
+| *Line* | *Pattern* | *Hold*         | *1d*                      | *Pattern (after* ~g~) | *Auto-print* |
+|------+---------+--------------+-------------------------+-------------------+------------|
+|    1 | apple   | apple        | delete (jump to line 2) | skip              | skip       |
+|    2 | mango   | apple (skip) | skip                    | apple             | apple      |
+|    3 | banana  | apple (skip) | skip                    | apple             | apple      |
+
+-----
+
+**** ~x~ to swap content between Pattern & Hold Space
+
+*EXAMPLE 1*
+#+begin_src shell
+sed '1h;x' data.txt
+#+end_src
+
+- ~1h~ line 1 ko copy *apple ⟶ Hold Space*
+- ~x~  swap Pattern & Hold Space
+
+| *Line* | *Pattern* | *Hold*         | *Pattern (after* ~x~) | *Hold (after* ~x~) | *Auto-print* |
+|------+---------+--------------+-------------------+----------------+------------|
+|    1 | apple   | apple        | apple             | apple          | apple      |
+|    2 | mango   | apple (skip) | apple             | mango          | apple      |
+|    3 | banana  | mango (skip) | mango             | banana         | mango      |
+
+-----
+
+*EXAMPLE 2*
+#+begin_src shell
+sed '1h;2x' data.txt
+#+end_src
+
+- ~1h~ line 1 ko copy *apple ⟶ Hold Space*
+- ~2x~ swap Pattern & Hold Space only in line 2
+
+
+| *Line* | *Pattern* | *Hold*         | *Pattern (after* ~x~) | *Hold (after* ~x~) | *Auto-print* |
+|------+---------+--------------+-------------------+----------------+------------|
+|    1 | apple   | apple        | skip              | skip           | apple      |
+|    2 | mango   | apple (skip) | apple             | mango          | apple      |
+|    3 | banana  | mango (skip) | skip              | skip           | banana     |
+
+
+**** ~H~ append karta hai pattern ko Hold Space me ~\n + pattern~.
+
+#+begin_src shell
+sed 'H;x' data.txt
+#+end_src
+
+| *Line* | *Pattern* | *Hold*  | *Hold (after* ~H~) | *Pattern (after* ~x)~ | *Hold (after* ~x~) | *Auto-print*    |
+|------+---------+-------+----------------+-------------------+----------------+---------------|
+|    1 | apple   | empty | \napple        | \napple           | apple          | \napple       |
+|    2 | mango   | apple | apple\nmango   | apple\nmango      | mango          | apple\nmango  |
+|    3 | banana  | mango | mango\nbanana  | mango\nbanana     | banana         | mango\nbanana |
+
+**** ~G~ *append* karta hai Hold Space ko Pattern Space ke end me.
+
+*EXAMPLE 1*
+#+begin_src shell
+sed '1h;G' data.txt
+#+end_src
+
+- ~1h~ sirf line 1 par Hold = *apple*
+- ~G~  har line par Hold ko Pattern ke end me append karega.
+
+| *Line* | *Pattern* | *Hold*  | *Pattern (after* ~G~) | *Auto-print*    |
+|------+---------+-------+-------------------+---------------|
+|    1 | apple   | apple | apple\napple      | apple\napple  |
+|    2 | mango   | apple | mango\napple      | mango\napple  |
+|    3 | banana  | apple | banana\napple     | banana\napple |
+
+-----
+
+*EXAMPLE 2*
+#+begin_src shell
+sed '1h;2G' data.txt
+#+end_src
+
+- ~1h~ sirf line 1 par Hold = *apple*
+- ~2G~ sirf line 2 par ~G~ execute hoga.
+
+| *Line* | *Pattern* | *Hold*  | *Pattern (after* ~G~) | *Auto-print*   |
+|------+---------+-------+-------------------+--------------|
+|    1 | apple   | apple | skip              | apple        |
+|    2 | mango   | apple | mango\napple      | mango\napple |
+|    3 | banana  | apple | skip              | banana       |
+
+-----
+
+*EXAMPLE 3*
+#+begin_src shell
+sed '1h;1!H;$!d;g' data.txt
+#+end_src
+
+- ~1h~ Hold = *apple*
+- ~1!H~ agar line 1 nahi hai to ~H~ execute karo
+- ~$!d~ agar last line nahi hai to delete
+- Last line par ~g~ Pattern = Hold
+
+
+| *Line* | *Pattern* | *Hold*         | *Hold (1!H)*           | *Delete ($!d)* | *g*         | *Auto-print*           |
+|------+---------+--------------+----------------------+--------------+-----------+----------------------|
+|    1 | apple   | apple        | apple (skip)         | delete       | skip      | skip                 |
+|    2 | mango   | apple (skip) | apple\nmango         | delete       | skip      | skip                 |
+|    3 | banana  | apple (skip) | apple\nmango\nbanana | skip         | copy hold | apple\nmango\nbanana |
+
+
+*** Branching (Flow Control)
+Sed me bhi C ke goto jaisa system hai:
+- *:label*       label define
+- *b label*      jump always
+- *t label*      jump if substitution happened
+
+#+begin_src shell
+sed '/banana/!b skip; p; :skip' ./assets/sed.txt
+
+sed -n '/[0-9]/b num; b; :num; s/^/NUMBER LINE: /p' ./assets/sed.txt
+
+sed '
+s/apple/FRUIT/
+t found
+b
+:found
+s/^/FOUND: /
+' ./assets/sed.txt
+#+end_src
+
+
+
+
+** Sed Practical Problems
+#+begin_src
+# User data
+id: 101 name: Alice age: 25
+id: 102 name: Bob age: 30
+id: 103 name: Carol age: 28
+
+ERROR: disk   full
+INFO: system    ok
+WARNING:   high memory
+#+end_src
+
++ *1 Sirf IDs extract karna*
+  #+begin_src shell
+sed -En '/id: ([0-9]+).*/p' ./assets/sed_prob.txt
+sed -En 's/id: ([0-9]+).*/\1/p' ./assets/sed_prob.txt
+  #+end_src
+
++ *2 Names extract karna*
+  #+begin_src shell
+sed -En 's/.*name: ([a-zA-Z]+).*/\1/p' ./assets/sed_prob.txt
+  #+end_src
+
++ *3 ERROR lines higlight*
+  #+begin_src shell
+sed -n '/ERROR/s/^/*** /p' ./assets/sed_prob.txt
+  #+end_src
+
++ *4 INFO aur WARNING delete*
+  #+begin_src shell
+sed '/INFO\|WARNING/d' ./assets/sed_prob.txt
+  #+end_src
+
++ *5 Multiple spaces normalize*
+  - ➡ Extra spaces → single space
+      #+begin_src shell
+  sed -E 's/ +/ /g' ./assets/sed_prob.txt
+      #+end_src
+
++ *6 Block extract (ERROR-WARNING)*
+  #+begin_src shell
+sed -n '/ERROR/,/WARNING/p' ./assets/sed_prob.txt
+  #+end_src
+
++ *7 Line number add before text*
+  #+begin_src shell
+sed '=' ./assets/sed_prob.txt
+sed '=' ./assets/sed_prob.txt | sed 'N;s/\n/: /'
+
+sed -e '/^ *$/d' ./assets/sed_prob.txt
+  #+end_src
+
+
+* tr command in Linux
+
+~tr~ ek *text processing utility* hai jo characters ko *translate, delete ya squeeze karta hai.
+Ye *stdin* se input leta hai aur result *stdout* par likhta hai.
+
+#+begin_src shell
+tr [OPTIONS] SET1 [SET2]
+#+end_src
+- *SET1* : characters jin par operation hoga.
+- *SET2* : translation ke case me SET1 ke corresponding replacement characters.
+
+-----
+
+*Translation*
+
+Translation operation me *SET1* aur *SET2* dono required hote hain.
+
+Simple example characters *eod* ko convert kardo to *EOD*
+#+begin_src shell
+echo 'hello world' | tr 'eod' 'EOD'
+#+end_src
+
+When *SET1 > SET2*:
+Repeat last character from SET2 for remaining characters in SET1
+- *e ⟶ E*
+- *o ⟶ O*
+- *d ⟶ O*
+#+begin_src shell
+echo 'hello world' | tr 'eod' 'EO'
+#+end_src
+
+When *SET1 < SET2*:
+Ignore extra characters from SET2
+#+begin_src shell
+echo 'hello world' | tr 'eo' 'EOD'
+#+end_src
+
+~-t~ truncate option sirf translation ke saath use hota hai.
+Isme translation se pehle *SET1* ko truncate kiya jata hai taaki uski length *SET2* ke barabar ho jaye.
+Isliye extra characters in *SET1* ignore ho jate hain.
+
+#+begin_src shell
+echo 'hello world' | tr -t 'eod' 'EO'
+#+end_src
+
+-----
+
+*Options & Descriptions*
+
+~tr~ me 4 primary options hote hain:
+1. ~-c~    complement the set of characters in SET1
+2. ~-d~    delete characters in SET1
+3. ~-s~    squeeze repeated characters into a single character
+4. ~-t~    truncate SET1 & SET2 to equal lengths
+
+~-c~ jo characters SET1 me nahi hai unpe operation karo.
+~-c~ ka matlab hai *SET1* ka complement. Ye aksar ~-d~ ya ~-s~ ke saath use hota hai.
+Lekin translation ke saath bhi use kiya ja sakta hai.
+
+*delete aur squeeze operation me SET2 required nahi hai.*
+
+-----
+
+*Examples*
+
+#+begin_src shell
+echo 'hello world' | tr 'a-z' 'A-Z'
+
+echo -e 'abc123xyz' | tr -d '0-9'
+echo -e 'hello   world    linux' | tr -s ' '
+
+echo -e 'abc123' | tr -c 'a-z' '?'
+
+echo -e 'abc123!@#XYZ' | tr -cd 'a-zA-Z'
+echo -e 'abc123!@#XYZ' | tr -cd '[:alnum:]'
+
+echo -e 'Hello World 123' | tr 'a-z' 'A-Z' | tr -d '[:digit:]'
+#+end_src
+
+_ROT13 Cipher Example_
+
+*ROT13 (Rotate by 13)* ek simple encryption algorithm hai, jisme hum alphabets ko 13 place aage move karte hain.
+#+begin_src
+a b c d e f g h i j k l m n o p q r s t u v w x y z
+n o p q r s t u v w x y z a b c d e f g h i j k l m
+#+end_src
+
+Encryption using ROT13 algo
+#+begin_src shell
+echo -e 'hello world' | tr 'a-z' 'n-za-m'
+#+end_src
+
+Decrypting ROT13 Cipher
+#+begin_src shell
+echo -e 'uryyb jbeyq' | tr 'n-za-m' 'a-z'
+#+end_src
+
+
+* cut command in Linux
+
+~cut~ ek *text processing command* hai jo line se *character, bytes ya fields* extract karta hai.
+
+Ye file ya standard input (stdin) dono se input le sakta hai.
+#+begin_src shell
+cut -c1 /etc/resolv.conf
+cat /etc/resolv.conf | cut -c1
+#+end_src
+
+~cut~ ke 3 primary modes hote hain:
+- *Character Mode* (~-c~)  — Characters extract karta hai.
+- *Byte Mode* (~-b)~       — Bytes extract karta hai.
+- *Field Mode* (~-f~)      — Delimiter ke basis par fields extract karta hai.
+
+-----
+
+*Character & Byte Mode*
+
+Ye example har line ke characters 1 se 5 tak extract karega.
+#+begin_src shell
+echo 'apple mango banana' | cut -c1-5
+#+end_src
+
+Difference between *Character & *Byte Mode*:
+- *ASCII* me 1 char = 1 byte
+- *UTF-8* me 1 char = 1-4 byte
+
+~-c~ character extract karta hai aur ~-b~ bytes ke hissab se extract karta hain.
+#+begin_src shell
+echo 'éclair' | cut -c1
+
+echo 'éclair' | cut -b1
+echo 'éclair' | cut -b1-2    # é 2 bytes ka hota hai.
+#+end_src
+
+-----
+
+*Field Mode*
+
+Field extraction delimiter ke base par hota hain.
+*Default delimiter = TAB*
+#+begin_src shell
+echo 'apple mango banana' | cut -f1    # tab delim nahi hai to puri line print hogi
+
+echo 'apple mango banana' | cut -d' ' -f1
+echo 'apple mango banana' | cut -d' ' -f3
+#+end_src
+
+Field mode me hame 2 useful options hote hain:
+- Suppress non-delimited lines (~-s~)
+- Change output delimiter (~--output-delimiter~)
+
+By default agar line me delimiter nahi milta to ~cut~ us line ko as-is print karta hai.
+~-s~ aisi lines ko suppress kar deta hai.
+#+begin_src shell
+echo 'hello
+apple mango banana' | cut -s -d' ' -f1
+#+end_src
+
+Aur agar output me delimiter change karna ho to.
+#+begin_src shell
+echo 'apple mango banana' | cut -d' ' --output-delimiter=',' -f1-3
+#+end_src
+
+-----
+
+*Ranges*
+
+Characters, bytes aur fields 3no me ranges use ki ja sakti hain.
+Hum data extract based on ranges bhi kar sakte hain.
+#+begin_src shell
+echo "apple banana mango" | cut -c1             # first character
+echo "apple banana mango" | cut -c1-5           # in range (1-5)
+echo "apple banana mango" | cut -c1-5,13-18     # multiple ranges (1-5) & (13-18)
+echo "apple banana mango" | cut -c14-           # from 14 to end
+echo "apple banana mango" | cut -c-5            # in range (1-5)
+#+end_src
+
+
+* sort command in Linux
+
+~sort~ is a *text processing utility* that sorts lines of text.
+
+Data:
+#+begin_src text :create data.txt
+mango
+apple
+baNaNa
+Apple
+banana
+#+end_src
+
+Ye file ya standard input (stdin) dono se input le sakta hai.
+#+begin_src shell
+sort data.txt
+cat data.txt | sort
+#+end_src
+
+By default ~sort~ sorts lines in lexicographically (dictionary order) based on *current locale (LC_COLLATE)*.
+
+#+begin_src shell
+sort data.txt
+#+end_src
+
+Comparison rules mainly ~LC_COLLATE~ locale category se aate hain (ya agar ~LC_ALL~ set hai to usse override hoti hai).
+
+Isliye output system ki locale (~en_US.UTF-8~, ~hi_IN.UTF-8~, etc.) ke hisaab se change ho sakta hai.
+
+*Byte-wise (C Locale) Sorting*
+
+#+begin_src shell
+LC_ALL=C sort data.txt
+#+end_src
+
+poora program *C/Posix locale* me chala deta hai.
+C locale me comparison *byte-by-byte (ASCII order)* hota hai.
+
+** Options & Descriptions
+
+| Flag         | Description                                               |
+|--------------+-----------------------------------------------------------|
+| ~-n~           | Numeric sort (e.g., ~10~ after ~2~)                           |
+| ~-r~           | Reverse sort                                              |
+| ~-k~           | Sort on a specific field (column)                         |
+| ~-t~           | Define a custom field delimiter (default is space or tab) |
+| ~-u~           | Unique sort (removes duplicate lines)                     |
+| ~-M~           | Sort by month names (e.g., Jan, Feb, ...)                 |
+| ~-V~           | Version sort (e.g., ~file2~ < ~file10~)                       |
+| ~-c~           | Check if the file is sorted                               |
+| ~--parallel=N~ | Use N threads for sorting                                 |
+| ~--stable~     | Preserve original order for equal sort keys               |
+
+-----
+
+** *Sorting Numbers*
+
+Data:
+#+begin_src text :create data.txt
+3
+4
+10
+4
+7
+#+end_src
+
+Dictionary sorting me ~1 < 3~
+#+begin_src shell
+sort data.txt
+#+end_src
+
+Numbers sorting ke liye use ~-n~ option.
+#+begin_src shell
+sort -n data.txt
+sort -nr data.txt    # reverse numbers
+sort -nu data.txt    # unique numbers only
+#+end_src
+
+- ~-c~ checks based on dictionary rules
+- isliye use ~-nc~ when checking for numbers
+#+begin_src shell
+sort -n data.txt | sort -c
+sort -n data.txt | sort -nc
+#+end_src
+
+-----
+
+** *Fields*
+
+Data:
+#+begin_src text :create  data.txt
+apple,8
+cherry,25
+banana,25
+cherry,8
+grape,8
+apple,10
+banana,8
+#+end_src
+`
+Default delimiter is *space or tab* hum isko change karenge using ~-t~ option.
+#+begin_src shell
+sort -t, -k2 -n data.txt
+#+end_src
+
+- ~k1~ means field 1 se end tak compare karo
+- ~-k1,1~ means only field 1
+- ~--stable~ preserves order
+#+begin_src shell
+sort -t, -k1 data.txt
+sort -t, -k1,1 data.txt
+sort -t, -k1,1 --stable data.txt
+#+end_src
+
+Sort based on multiple fields
+#+begin_src shell
+sort -t, -k1,1 -k2,2n data.txt
+#+end_src
+
++ *-M*  sort by Month names (*March < April*)
++ *-V*  sort by version numbers (*v1.2 < v1.10*)
+#+begin_src text :create data.txt
+10 May file1.2
+5 March file1.10
+23 April file1.3
+10 Feb file1.1
+23 Jan file1.2
+#+end_src
+
+#+begin_src shell
+sort -k2,2 data.txt
+sort -k2,2 -M data.txt
+
+sort -k3,3 data.txt
+sort -k3,3 -V data.txt
+
+sort -k1,1n -k2,2M data.txt    # first sort by numbers - field1 then by month - field 2
+#+end_src
 
 
 * Eval Last Expression for Bash
@@ -49,6 +843,10 @@ Now hum kis context me hai ye check kar sakte hai like
 
 #+begin_src emacs-lisp
 (my-lang-context-p "fundamental-mode" "emacs-lisp")
+#+end_src
+
+#+begin_src shell
+(my-lang-context-p 'sh-mode 'shell)
 #+end_src
 
 Step 1: Simple single line expression
@@ -128,6 +926,19 @@ world'
 	  (setf done t))))
 
     expr))
+#+end_src
+
+#+begin_src emacs-lisp
+(defun my-eval-last-exp ()
+  (interactive)
+  (when (my-lang-context-p 'sh-mode 'shell)
+    (my-vterm-send (my-eval-last-exp-shell))))
+
+(global-set-key (kbd "C-M-e") #'my-eval-last-exp)
+#+end_src
+
+#+begin_src shell
+ls
 #+end_src
 
 
@@ -325,15 +1136,17 @@ Now ab hum commands run kar sakte hai
 
 * Theme Switcher in Emacs
 
-~custom-enabled-themes~ Emacs ka built-in variable hai jo currently enabled themes ki list rakhta hai.
-
 #+begin_src emacs-lisp
 custom-enabled-themes
+(load-theme 'manoj-dark)
+(disable-theme 'manoj-dark)
 #+end_src
 
-Toh general idea ye hai ki ye saari purani themes ko disable karo.
+- ~custom-enabled-themes~ built-in variable hai jo currently enabled themes ki list store karta hain.
+- ~(load-theme theme)~    function theme ko load karta hai
+- ~(disable-theme theme)~ function theme ko disable karta hai
 
-Ek time par multiple themes enabled ho sakti hain. Isliye nayi theme load karne se pehle purani themes disable kar dete hain taaki colors mix na hon.
+General Idea, Purani saari themes ko disable karo
 
 #+begin_src emacs-lisp
 (mapc #'disable-theme custom-enabled-themes)
@@ -345,6 +1158,8 @@ Aur uske baad apni theme load karo.
 (load-theme 'tango-dark t)
 #+end_src
 
+*t* argument dene se unsafe theme hone par confirmation nahi maangta.
+
 ** Step 1: Install Theme Package
 
 #+begin_src emacs-lisp
@@ -354,7 +1169,7 @@ Aur uske baad apni theme load karo.
 Hum apni kuch favorite themes se selection karenge.
 
 #+begin_src emacs-lisp
-(defvar *my-themes*
+(defvar my-themes
   '(doom-material-dark
     doom-1337
     doom-acario-dark
@@ -364,7 +1179,7 @@ Hum apni kuch favorite themes se selection karenge.
 Hamara current theme index.
 
 #+begin_src emacs-lisp
-(defvar *my-theme-index* 0)
+(defvar my-theme-index 0)
 #+end_src
 
 ** Step 2: Load Theme
@@ -373,12 +1188,12 @@ Hamara current theme index.
 
 #+begin_src emacs-lisp
 (defun my-load-theme (index)
-  (let* ((len   (length *my-themes*))
+  (let* ((len   (length my-themes))
 	 (idx   (mod index len))
-	 (theme (nth idx *my-themes*)))
+	 (theme (nth idx my-themes)))
     (mapc #'disable-theme custom-enabled-themes)
     (load-theme theme t)
-    (setf *my-theme-index* idx)
+    (setf my-theme-index idx)
     (message "Theme Loaded: %s" theme)))
 #+end_src
 
@@ -387,7 +1202,7 @@ Ye hamara main driving function hai jo cycle karega through all our themes.
 #+begin_src emacs-lisp
 (defun my-cycle-themes ()
   (interactive)
-  (my-load-theme (1+ *my-theme-index*)))
+  (my-load-theme (1+ my-theme-index)))
 #+end_src
 
 Set it to a keybinding.
@@ -396,10 +1211,10 @@ Set it to a keybinding.
 (global-set-key (kbd "<f5>") #'my-cycle-themes)
 #+end_src
 
-Mujhe jo emacs ki default white theme hai wo bhi chahiye to ~*my-themes*~ variable me hum ek *default* naam se theme add kar dete hai.
+Mujhe jo emacs ki default white theme hai wo bhi chahiye to ~my-themes~ variable me hum ek *default* naam se theme add kar dete hai.
 
 #+begin_src emacs-lisp
-(defvar *my-themes*
+(defvar my-themes
   '(default
     ....))
 #+end_src
@@ -418,7 +1233,7 @@ fir *my-load-theme* function me.
 Is File me hum apni theme state save karenge.
 
 #+begin_src emacs-lisp
-(defvar *my-theme-state-file* "~/.emacs.d/theme-state.el")
+(defvar my-theme-state-file "~/.emacs.d/theme-state.el")
 #+end_src
 
 - Jab Emacs exit hota hai, tab ~kill-emacs-hook~ trigger hota hai.
@@ -429,30 +1244,29 @@ Is File me hum apni theme state save karenge.
 #+begin_src emacs-lisp
 (add-hook 'kill-emacs-hook
 	  (lambda ()
-	    (with-temp-file *my-theme-state-file*
-	      (insert (format "(setf *my-theme-index* %d)"
-			      *my-theme-index*)))))
+	    (with-temp-file my-theme-state-file
+	      (insert (format "(setf my-theme-index %d)" my-theme-index)))))
 #+end_src
 
 Is File me humne emacs-lisp ka expression store kar diya hai example like:
 
 #+begin_src emacs-lisp
-(setf *my-theme-index* 2)
+(setf my-theme-index 2)
 #+end_src
 
 ** Step 4: Loading Theme on Startup
 
-Hum check karenge ki agar ~*my-theme-state-file*~ exists karti hai to use load kar do.
+Hum check karenge ki agar ~my-theme-state-file~ exists karti hai to use load kar do.
 
 #+begin_src emacs-lisp
-(when (file-exists-p *my-theme-state-file*)
-  (load-file *my-theme-state-file*))
+(when (file-exists-p my-theme-state-file)
+  (load-file my-theme-state-file))
 #+end_src
 
-Isko run karke hamara ~*my-theme-index*~ variable update ho jaayega.
+Isko run karke hamara ~my-theme-index~ variable update ho jaayega.
 
 Finally,
 
 #+begin_src emacs-lisp
-(my-load-theme *my-theme-index*)
+(my-load-theme my-theme-index)
 #+end_src
